@@ -11,18 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('admissions', function (Blueprint $table) {
-            $table->json('documents')->nullable(); // stores uploaded file paths
+        Schema::create('classrooms', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
         });
     }
-    
+
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::table('admissions', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('classrooms');
     }
 };

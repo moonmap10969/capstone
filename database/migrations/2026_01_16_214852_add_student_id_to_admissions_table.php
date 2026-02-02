@@ -9,12 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-{
-    Schema::table('admissions', function (Blueprint $table) {
-        $table->string('student_number')->nullable()->after('application_id');
-    });
-}
+    public function up()
+    {
+        Schema::table('admissions', function (Blueprint $table) {
+            $table->unsignedBigInteger('student_id')->nullable()->after('id');
+    
+            // Optional: foreign key if you have users table
+            $table->foreign('student_id')->references('id')->on('users')->onDelete('cascade');
+        });
+    }
     
     public function down()
     {

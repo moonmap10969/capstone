@@ -15,7 +15,7 @@
         </div>
         <h2 class="text-2xl font-bold text-gray-800 mb-2">Success!</h2>
         <p class="text-gray-600 mb-6">Your admission application has been successfully submitted for review.</p>
-        <a href="{{ route('home') }}" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
+       <a href="{{ route('welcome') }}" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
             Back to Home
         </a>
     </div>

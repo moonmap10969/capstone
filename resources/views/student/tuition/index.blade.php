@@ -1,154 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>My Tuition | FUMCES</title>
-    @vite(['resources/css/app.css'])
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Tuition Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 flex">
+<body class="min-h-screen flex bg-gray-100">
 
-    @include('student.layouts.sidebar')
+  @include('student.layouts.sidebar')
 
-    <main class="flex-1 ml-64 p-8">
-        {{-- Header --}}
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold mb-2 text-gray-800">My Tuition</h1>
-            <p class="text-gray-500 font-medium">School Year 2026–2027</p>
-        </div>
+  <main class="flex-1 px-6 py-10 lg:px-12 space-y-12">
 
-        {{-- Stats Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-[#057E2E] rounded-2xl p-6 text-white shadow-lg">
-                <p class="text-sm opacity-80 uppercase tracking-wider font-semibold">Total Tuition</p>
-                <p class="text-3xl font-bold mt-2">₱{{ number_format($totalTuition, 2) }}</p>
-            </div>
-            <div class="bg-[#057E2E] rounded-2xl p-6 text-white shadow-lg">
-                <p class="text-sm opacity-80 uppercase tracking-wider font-semibold">Total Paid</p>
-                <p class="text-3xl font-bold mt-2">₱{{ number_format($totalPaid, 2) }}</p>
-            </div>
-            <div class="bg-[#057E2E] rounded-2xl p-6 text-white shadow-lg">
-                <p class="text-sm opacity-80 uppercase tracking-wider font-semibold">Remaining Balance</p>
-                <p class="text-3xl font-bold mt-2">₱{{ number_format($remainingBalance, 2) }}</p>
-            </div>
-        </div>
-
-        {{-- Progress Bar --}}
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-sm font-bold text-gray-700">Payment Progress</span>
-                <span class="text-2xl font-black text-[#057E2E]">{{ round($percentagePaid) }}%</span>
-            </div>
-            <div class="h-4 bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full bg-[#057E2E] rounded-full transition-all duration-1000" style="width: {{ $percentagePaid }}%"></div>
-            </div>
-        </div>
-
-        {{-- Payment List --}}
-        <div class="space-y-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Transaction History</h2>
-            @forelse($payments as $payment)
-                <div class="flex items-center justify-between bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-                    <div class="flex items-center gap-4">
-                        <div class="{{ strtolower($payment->status) === 'paid' ? 'text-green-500' : 'text-amber-500' }}">
-                            @if(strtolower($payment->status) === 'paid')
-                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                            @else
-                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            @endif
-                        </div>
-                        <div>
-                            <p class="font-bold text-gray-800">{{ $payment->description }}</p>
-                            <p class="text-xs text-gray-500 font-medium">{{ \Carbon\Carbon::parse($payment->date)->format('M d, Y') }}</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold text-gray-900">₱{{ number_format($payment->amount, 2) }}</p>
-                        <span class="text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full {{ strtolower($payment->status) === 'paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">
-                            {{ $payment->status }}
-                        </span>
-                    </div>
-                </div>
-            @empty
-                <div class="bg-white p-12 text-center rounded-2xl text-gray-400 border-2 border-dashed border-gray-100">
-                    <p class="font-medium">No transaction history recorded yet.</p>
-                </div>
-            @endforelse
-        </div>
-
-        {{-- Payment Action --}}
-        <div class="mt-8">
-            <a href="{{ route('student.tuitions.index', ['show_payment' => 1]) }}"
-               class="block text-center bg-[#057E2E] hover:bg-[#046324] text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-900/20 transition transform active:scale-[0.98]">
-                Make a Payment
-            </a>
-        </div>
-
-        {{-- Modal --}}
-@if(request('show_payment'))
-    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full relative">
-            <a href="{{ route('student.tuitions.index') }}" 
-            class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors text-xl font-bold">
-                ✕
-            </a>
-
-            <form action="{{ route('payments.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <h2 class="text-2xl font-black text-gray-800 mb-2">Submit Payment</h2>
-                <p class="text-gray-500 text-sm mb-6">Please upload your proof of payment for verification.</p>
-
-                {{-- Scrollable Form Fields --}}
-                <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                        <input type="text" name="full_name" value="{{ auth()->user()->name }}" class="w-full mt-1 p-4 bg-gray-50 border-none rounded-xl" readonly>
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Student Number</label>
-                        <input type="text" name="student_number" value="{{ auth()->user()->username }}" class="..." readonly>
-
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Reference Number</label>
-                        <input name="reference_number" class="w-full mt-1 p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#057E2E]" required>
-                    </div>
-                     <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
-                            Payment Method
-                        </label>
-                        <select name="payment_method"
-                            class="w-full mt-1 p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#057E2E]"
-                            required>
-                            <option value="" disabled selected>Select payment method</option>
-                            <option value="gcash">GCash</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Payment Description</label>
-                        <textarea name="description" rows="2" class="w-full mt-1 p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#057E2E]" required></textarea>
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Amount</label>
-                        <input type="number" name="amount" class="w-full mt-1 p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#057E2E]" required>
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Receipt Image</label>
-                        <input type="file" name="receipt" class="w-full mt-1 p-3 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-green-50 file:text-[#057E2E]" required>
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full mt-6 bg-[#057E2E] text-white font-bold py-4 rounded-xl hover:bg-[#046324] transition-transform active:scale-95">
-                    Submit Payment
-                </button>
-            </form>
-        </div>
+    <!-- Header -->
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Tuitions</h1>
+      <p class="text-gray-500 mt-1">View and manage your tuition fees and payment history</p>
     </div>
-@endif
-    </main>
 
+    <!-- Payment Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+      <!-- Total Tuition -->
+      <div class="bg-white shadow rounded-xl p-6 flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500">Total Tuition</p>
+          <p class="text-2xl font-bold text-green-700">₱65,200</p>
+        </div>
+        <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center">
+          <span class="text-green-700 font-bold text-lg">₱</span>
+        </div>
+      </div>
+
+      <!-- Total Paid -->
+      <div class="bg-white shadow rounded-xl p-6 flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500">Total Paid</p>
+          <p class="text-2xl font-bold text-green-700">₱63,200</p>
+        </div>
+        <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center">
+          <span class="text-green-700 font-bold text-lg">✓</span>
+        </div>
+      </div>
+
+      <!-- Remaining Balance -->
+      <div class="bg-white shadow rounded-xl p-6 flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500">Remaining Balance</p>
+          <p class="text-2xl font-bold text-green-700">₱2,000</p>
+        </div>
+        <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center">
+          <span class="text-green-700 font-bold text-lg">⚠</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tuition Breakdown & Payment History -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+
+      <!-- Tuition Breakdown -->
+      <div class="bg-white shadow rounded-xl w-full">
+        <div class="p-6 border-b">
+          <h2 class="text-lg font-semibold text-green-700">Fee Breakdown</h2>
+        </div>
+        <div class="p-6 space-y-2 w-full">
+          <div class="flex justify-between py-2 border-b">
+            <span class="text-gray-500">Tuition Fee</span>
+            <span class="font-medium">₱45,000</span>
+          </div>
+          <div class="flex justify-between py-2 border-b">
+            <span class="text-gray-500">Laboratory Fees</span>
+            <span class="font-medium">₱8,500</span>
+          </div>
+          <div class="flex justify-between py-2 border-b">
+            <span class="text-gray-500">Miscellaneous Fees</span>
+            <span class="font-medium">₱5,200</span>
+          </div>
+          <div class="flex justify-between py-2 border-b">
+            <span class="text-gray-500">Library Fee</span>
+            <span class="font-medium">₱1,500</span>
+          </div>
+          <div class="flex justify-between py-2">
+            <span class="text-gray-500">Technology Fee</span>
+            <span class="font-medium">₱3,000</span>
+          </div>
+          <div class="flex justify-between pt-4 border-t-2">
+            <span class="font-semibold text-green-700">Total</span>
+            <span class="font-bold text-lg text-green-700">₱65,200</span>
+          </div>
+
+          <!-- Payment Progress -->
+          <div class="pt-4 w-full">
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-gray-500">Payment Progress</span>
+              <span class="text-sm font-medium text-green-700">97%</span>
+            </div>
+            <div class="w-full bg-gray-200 h-3 rounded-full">
+              <div class="bg-green-700 h-3 rounded-full" style="width: 97%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment History -->
+      <div class="bg-white shadow rounded-xl w-full">
+        <div class="p-6 flex items-center justify-between border-b">
+          <h2 class="text-lg font-semibold text-green-700">Payment History</h2>
+          <button class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 text-sm">
+            Submit Payment
+          </button>
+        </div>
+        <div class="p-6 space-y-4 w-full">
+          <div class="flex items-center justify-between p-4 rounded-lg bg-green-100 w-full">
+            <div class="flex items-center gap-3">
+              <div class="h-10 w-10 rounded-full bg-green-200 flex items-center justify-center">
+                <span class="text-green-700 font-bold">₱</span>
+              </div>
+              <div>
+                <p class="font-medium text-green-700">₱25,000</p>
+                <p class="text-xs text-gray-500">Bank Transfer • TXN-2026-0110</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="bg-green-200 text-green-700 text-xs px-2 py-0.5 rounded-full">Paid</span>
+              <p class="text-xs text-gray-500 mt-1">Jan 10, 2026</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 rounded-lg bg-green-100 w-full">
+            <div class="flex items-center gap-3">
+              <div class="h-10 w-10 rounded-full bg-green-200 flex items-center justify-center">
+                <span class="text-green-700 font-bold">₱</span>
+              </div>
+              <div>
+                <p class="font-medium text-green-700">₱20,000</p>
+                <p class="text-xs text-gray-500">GCash • TXN-2025-1215</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="bg-green-200 text-green-700 text-xs px-2 py-0.5 rounded-full">Paid</span>
+              <p class="text-xs text-gray-500 mt-1">Dec 15, 2025</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Outstanding Balance -->
+<div class="w-full">
+    <div class="bg-green-700 text-white shadow rounded-xl p-6 flex flex-col md:flex-row items-center justify-between w-full">
+      <div class="mb-4 md:mb-0">
+        <h3 class="font-semibold text-lg">Outstanding Balance</h3>
+        <p class="text-sm opacity-80">Due date: February 15, 2026</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <p class="text-2xl font-bold">₱2,000</p>
+        <button class="bg-white text-green-700 px-4 py-2 rounded hover:bg-gray-100">Pay Now</button>
+      </div>
+    </div>
+  </div>
+  
+
+  </main>
 </body>
 </html>

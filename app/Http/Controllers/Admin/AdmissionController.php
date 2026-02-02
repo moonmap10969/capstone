@@ -3,88 +3,62 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admission;
 use Illuminate\Http\Request;
+use App\Models\Admission;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\AdmissionApproved;
+use App\Mail\StudentNumberGenerated;
+use App\Mail\AdmissionRejectedMail;
 
 class AdmissionController extends Controller
 {
-    /**
-     * Display a listing with search and filters.
-     */
-    public function index(Request $request)
-    {
-        $query = Admission::query();
-
-        // Search by Name or Application ID
-        if ($request->has('search')) {
-            $search = $request->get('search');
-            $query->where(function($q) use ($search) {
-                $q->where('student_first_name', 'like', "%{$search}%")
-                  ->orWhere('student_last_name', 'like', "%{$search}%")
-                  ->orWhere('application_id', 'like', "%{$search}%");
-            });
-        }
-
-        // Filter by Grade
-        if ($request->filled('grade')) {
-            $query->where('grade_applied', $request->grade);
-        }
-
-        $admissions = $query->latest()->paginate(10);
-
-        // Stats for Dashboard
-        $totalPendingApprovals = Admission::where('status', 'document_verification')->count();
-        $totalApproved = Admission::where('status', 'approved')->count();
-        $totalRejected = Admission::where('status', 'rejected')->count();
-        $totalStudentsRegistered = Admission::count();
-
-        $grades = Admission::select('grade_applied')->distinct()->orderBy('grade_applied')->pluck('grade_applied');
-
-        return view('admin.admissions.index', compact(
-            'admissions', 'totalPendingApprovals', 'totalApproved', 
-            'totalRejected', 'totalStudentsRegistered', 'grades'
-        ));
-    }
-
-public function approve($id)
+  public function index()
 {
-    $admission = \App\Models\Admission::findOrFail($id);
-    $studentNumber = date('Y') . rand(1000, 9999);
 
-    $admission->update([
-        'status' => 'approved',
-        'student_number' => $studentNumber
-    ]);
+    $admissions = Admission::paginate(10); 
+    
+    $grades = Admission::select('year_level')->distinct()->pluck('year_level');
+    $totalPendingApprovals = Admission::where('status', 'pending')->count();
+    $totalApproved = Admission::where('status', 'approved')->count();
+    $totalRejected = Admission::where('status', 'rejected')->count();
+    $totalStudentsRegistered = Admission::count();
 
-    // Create or update the student's login account
-    \App\Models\User::updateOrCreate(
-        ['email' => $admission->email],
-        [
-            'name' => $admission->student_first_name . ' ' . $admission->student_last_name,
-            'username' => $studentNumber,
-            'password' => \Illuminate\Support\Facades\Hash::make($studentNumber),
-            'role' => 'student', 
-        ]
-    );
-
-    \Illuminate\Support\Facades\Mail::to($admission->email)
-        ->send(new \App\Mail\ApplicationSubmitted($admission));
-
-    return back()->with('success', 'Application approved! Student login is now active.');
+    return view('admin.admissions.index', compact(
+        'admissions', 'grades', 'totalPendingApprovals', 
+        'totalApproved', 'totalRejected', 'totalStudentsRegistered'
+    ));
 }
 
-
-    public function edit(Admission $admission)
-{
-    return view('admin.admissions.edit', compact('admission'));
-}
-    public function reject($id)
+    public function show(Admission $admission)
     {
-        $application = Admission::findOrFail($id);
-        $application->update(['status' => 'rejected']);
-
-        return redirect()->back()->with('error', 'Admission rejected.');
+        return view('admin.admissions.show', compact('admission'));
     }
+
+    public function approve(Admission $admission)
+    {
+        $studentNumber = date('Y') . str_pad($admission->id, 5, '0', STR_PAD_LEFT);
+        
+        $admission->update([
+            'status' => 'approved',
+            'student_number' => $studentNumber,
+            'password' => bcrypt($studentNumber),
+        ]);
+
+        Mail::to($admission->email)->send(new StudentNumberGenerated($studentNumber));
+
+        return back()->with('success', "Student approved. Number: $studentNumber");
+    }
+
+   public function reject(Admission $admission) {
+    $admission->update(['status' => 'rejected']);
+
+    $details = [
+        'subject' => 'Notification Regarding Your Admission Application',
+        'body' => "We regret to inform you that after careful review, we are unable to proceed with your application at this time. We sincerely apologize for any inconvenience this may cause and appreciate the interest you have shown in our institution.",
+        'contact' => "Should you have any questions regarding this decision, please contact our Admissions Office at (045) 123-4567 or email us at admissions@school.edu.ph."
+    ];
+
+   Mail::to($admission->email)->send(new AdmissionRejectedMail($admission));
+
+    return back()->with('success', 'Application rejected and email sent.');
+}
 }

@@ -9,24 +9,25 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('tuitions', function (Blueprint $table) {
+        Schema::create('admissions', function (Blueprint $table) {
             $table->id();
-            $table->string('student_number');
             $table->string('student_name');
-            $table->decimal('amount', 10, 2);
-            $table->enum('status', ['paid', 'partial', 'unpaid']);
+            $table->string('email');
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
         
+        
     }
+    
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('tuitions');
+        Schema::dropIfExists('grades');
     }
 };

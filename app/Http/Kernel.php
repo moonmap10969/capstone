@@ -28,6 +28,6 @@ class Kernel extends HttpKernel
      */
     protected $routeMiddleware = [
         'is_admin' => \App\Http\Middleware\IsAdmin::class,
-        // any other middleware you may have
+        'force_password_change' => \App\Http\Middleware\ForcePasswordChange::class, 
     ];
 }

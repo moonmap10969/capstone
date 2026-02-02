@@ -9,33 +9,38 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+public function up(): void
 {
-   Schema::create('admissions', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained()->onDelete('cascade');
-    $table->string('application_id')->unique(); // Temporary ID
-    $table->string('student_first_name');
-    $table->string('student_last_name');
-    $table->date('date_of_birth');
-    $table->string('grade_applied');
-    $table->string('parent_first_name');
-    $table->string('parent_last_name');
-    $table->string('email');
-    $table->string('phone');
-    $table->string('street');
-    $table->string('city');
-    $table->string('state');
-    $table->string('zip');
-    $table->string('birth_certificate')->nullable();
-    $table->string('immunization_records')->nullable();
-    $table->string('report_card')->nullable();
-    $table->string('good_moral')->nullable();
-    $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-    $table->timestamps();
+    Schema::create('admissions', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade'); // Missing in your snippet
+        $table->string('studentFirstName');
+        $table->string('studentLastName');
+        $table->date('dateOfBirth');
+        $table->string('year_level');
+        $table->string('previousSchool')->nullable();
+        $table->string('parentFirstName');
+        $table->string('parentLastName');
+        $table->string('email');
+        $table->string('phone');
+        $table->string('address'); 
+        $table->string('city'); // Added to match your controller
+        $table->string('state'); // Added to match your controller
+        $table->string('zipCode'); // Added to match your controller
+        $table->string('street'); 
+        $table->string('zip');    
+        $table->string('status')->default('pending');
+        $table->string('student_number')->unique()->nullable();
+        $table->string('report_card')->nullable();
+        $table->string('birth_certificate')->nullable();
+        $table->string('applicant_photo')->nullable();
+        $table->string('father_photo')->nullable();
+        $table->string('mother_photo')->nullable();
+        $table->string('guardian_photo')->nullable();
+        $table->string('transferee_docs')->nullable();
+        $table->timestamps();
     });
 }
-
     /**
      * Reverse the migrations.
      */

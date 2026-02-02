@@ -14,15 +14,6 @@
             <h3 class="font-semibold text-white">
                 {{ auth()->user()->name ?? 'Maria Santos' }}
             </h3>
-
-            <p class="text-sm text-white/80">
-                {{ auth()->user()->grade_level }} - Section {{ auth()->user()->section }}
-            </p>
-            
-            <p class="text-xs text-white/60 mt-1">
-                Student ID: {{ auth()->user()->student_id }}
-            </p>
-
             {{-- Logout Button --}}
             <form method="POST" action="{{ route('logout') }}" class="mt-4 flex justify-center">
                 @csrf

@@ -10,13 +10,14 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    if (!Schema::hasColumn('users', 'role')) {
+    {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['student', 'admin', 'teacher', 'developer'])->default('student')->after('email');
+            // Use enum to restrict roles to these four options
+            $table->enum('role', ['student', 'admin', 'teacher', 'developer'])
+                  ->default('student')
+                  ->after('email'); // optional, place after email column
         });
     }
-}
 
     /**
      * Reverse the migrations.

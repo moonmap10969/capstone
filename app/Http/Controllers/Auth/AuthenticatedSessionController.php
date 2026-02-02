@@ -27,23 +27,10 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
     
-        $user = Auth::user(); // get the currently authenticated user
-    
-        // redirect based on role
-        switch ($user->role) {
-            case 'admin':
-                return redirect()->route('admin.index'); // create this route/view
-            case 'teacher':
-                return redirect()->route('teacher.dashboard');
-            case 'student':
-                return redirect()->route('student.index');
-            case 'developer':
-                return redirect()->route('developer.dashboard');
-            default:
-                return redirect()->route('welcome'); // fallback
-        }
+        // All logged-in users go to welcome
+        return redirect()->route('welcome');
     }
-    
+            
     /**
      * Destroy an authenticated session.
      */
@@ -58,3 +45,5 @@ class AuthenticatedSessionController extends Controller
         return redirect('/');
     }
 }
+
+

@@ -2,40 +2,21 @@
 
 namespace App\Models;
 
-    use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-    class Admission extends Model
-    {
-        protected $fillable = [
-        'user_id', 
-        'application_id',
-        'student_first_name',
-        'student_last_name',
-        'date_of_birth',
-        'grade_applied',
-        'parent_first_name',
-        'parent_last_name',
-        'email',
-        'phone',
-        'street',
-        'city',
-        'state',
-        'zip',
-        'additional_info',
-        'birth_certificate',
-        'immunization_records',
-        'report_card',      
-        'good_moral',       
-        'student_number',   
-        'status',
-    ];
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function admission()
+class Admission extends Model
 {
-    return $this->hasOne(Admission::class);
+    use HasFactory;
+
+    protected $table = 'admissions';
+
+   protected $fillable = [
+    'user_id', 'studentFirstName', 'studentLastName', 'dateOfBirth', 
+    'year_level', 'previousSchool', 'parentFirstName', 'parentLastName', 
+    'email', 'phone', 'address', 'city', 'state', 'zipCode', 
+    'street', 'zip', 'status', 'report_card', 'birth_certificate', 
+    'applicant_photo', 'father_photo', 'mother_photo', 'guardian_photo', 
+    'transferee_docs'
+];
 }
-    }

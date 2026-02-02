@@ -3,8 +3,7 @@
     <div class="container mx-auto flex justify-between items-center p-4">
         <!-- Left: Logo + H1 -->
         <div class="flex items-center gap-0">
-            <img src="{{ asset('images/fumces_logo.jpg') }}"
-                alt="FUMCES Logo" class="h-16 w-auto">
+            <img src="{{ asset('images/fumces_logo.jpg') }}" alt="FUMCES Logo" class="h-16 w-auto">
             <h1 class="text-lg font-bold ml-2">
                 First United Methodist <br> Church Ecumenical School Inc.
             </h1>
@@ -19,51 +18,62 @@
             <a href="/contact" class="transition-all duration-200 hover:font-bold">Contact</a>
         </nav>
 
-        <!-- Right: Login + FUMSYS Portal for guests -->
-        @auth
-            <div class="flex items-center gap-2">
-                <a href="{{ route('student.index') }}"
+        <!-- Right: FUMSYS Portal / Login -->
+        <div class="flex items-center gap-2">
+            @auth
+                @php
+                    $role = auth()->user()->role;
+                    switch ($role) {
+                        case 'admin':
+                            $portalRoute = route('admin.index');
+                            break;
+                        case 'teacher':
+                            $portalRoute = route('teacher.index');
+                            break;
+                        case 'student':
+                            $portalRoute = route('student.index');
+                            break;
+                        case 'registrar':
+                            $portalRoute = route('registrar.index');
+                            break;
+                        case 'school-admin':
+                            $portalRoute = route('school-admin.index');
+                            break;
+                        case 'adviser':
+                            $portalRoute = route('adviser.index');
+                            break;
+                        case 'parent':
+                            $portalRoute = route('parent.index');
+                            break;
+
+
+
+                        default:
+                            $portalRoute = route('welcome');
+                    }
+                @endphp
+
+                <a href="{{ $portalRoute }}"
                     class="bg-[#057e2f] px-3 py-1 rounded hover:bg-green-700 font-bold inline-flex items-center gap-1">
                     <span class="text-[#d7e1b3]">FUMSYS</span>
                     <span class="text-[#e5db19]">Portal</span>
                 </a>
-                <form method="POST" action="/logout">
+
+                <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit"
                         class="bg-white border border-[#057e2f] text-[#057e2f] px-3 py-1 rounded font-bold hover:bg-[#f0f0f0]">
                         Logout
                     </button>
                 </form>
-            </div>
-        @else
-<!-- Right: Login + FUMSYS Portal for guests -->
-@auth
-    <div class="flex items-center gap-2">
-        <a href="/fumsys"
-            class="bg-[#057e2f] px-3 py-1 rounded hover:bg-green-700 font-bold inline-flex items-center gap-1">
-            <span class="text-[#d7e1b3]">FUMSYS</span>
-            <span class="text-[#e5db19]">Portal</span>
-        </a>
-        <form method="POST" action="/logout">
-            @csrf
-            <button type="submit"
-                class="bg-white border border-[#057e2f] text-[#057e2f] px-3 py-1 rounded font-bold hover:bg-[#f0f0f0]">
-                Logout
-            </button>
-        </form>
-    </div>
-@else
-    <div class="flex items-center gap-2">
-        <!-- FUMSYS Portal Button for guests -->
-        <a href="{{ route('login') }}"
-            class="bg-green-700 px-3 py-1 rounded hover:bg-green-800 font-bold inline-flex items-center gap-1">
-            <span class="text-green-200">FUMSYS</span>
-            <span class="text-yellow-400">Portal</span>
-        </a>
-    </div>
-@endauth
-
-
-        @endauth
+            @else
+                <!-- Guests -->
+                <a href="{{ route('login') }}"
+                    class="bg-green-700 px-3 py-1 rounded hover:bg-green-800 font-bold inline-flex items-center gap-1">
+                    <span class="text-green-200">FUMSYS</span>
+                    <span class="text-yellow-400">Portal</span>
+                </a>
+            @endauth
+        </div>
     </div>
 </header>
