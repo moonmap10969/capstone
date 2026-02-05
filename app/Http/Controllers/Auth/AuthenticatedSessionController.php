@@ -26,9 +26,18 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
         $request->session()->regenerate();
-    
-        // All logged-in users go to welcome
-        return redirect()->route('welcome');
+
+        $user = Auth::user();
+
+        // Direct users to their specific portal based on their database role
+        return match($user->role) {
+            'admin'        => redirect()->route('admin.index'),
+            'registrar'    => redirect()->route('registrar.index'),
+            'student'      => redirect()->route('student.index'),
+            'teacher'      => redirect()->route('teacher.index'),
+            'school-admin' => redirect()->route('school-admin.index'),
+            default        => redirect()->route('welcome'),
+        };
     }
             
     /**

@@ -13,7 +13,7 @@ public function up(): void
 {
     Schema::create('admissions', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade'); // Missing in your snippet
+        $table->foreignId('user_id')->constrained()->onDelete('cascade');
         $table->string('studentFirstName');
         $table->string('studentLastName');
         $table->date('dateOfBirth');

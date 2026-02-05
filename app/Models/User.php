@@ -5,53 +5,38 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Document;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'name',      // Allow name for mass assignment
-        'email',     // Allow email
-        'password',  // Allow password
+        'name', 'email', 'password', 'role', 'studentNumber', 'year_level', 'is_approved',
     ];
 
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
-    /**
-     * Get all general documents uploaded by the student.
-     */
-// app/Models/User.php
+    // Helper to check for registrar role
+    public function isRegistrar(): bool
+    {
+        return $this->role === 'registrar';
+    }
 
+    public function admission(): HasOne {
+        return $this->hasOne(Admission::class);
+    }
 
-public function documents()
-{
-    return $this->hasMany(Document::class);
-}
+    public function documents(): HasMany {
+        return $this->hasMany(Document::class, 'user_id');
+    }
 
-    /**
-     * Get all admissions of the student.
-     */
-    // app/Models/User.php
-public function admissions() {
-    return $this->hasMany(Admission::class);
-}
+    public function admissions(): HasMany {
+        return $this->hasMany(Admission::class);
+    }
 
-// Access documents through their admission record
-public function admissionDocuments() {
-    return $this->hasManyThrough(AdmissionDocument::class, Admission::class);
-}
+    public function payments(): HasMany {
+        return $this->hasMany(Payment::class);
+    }
 }

@@ -29,9 +29,9 @@
                             ['2','Documents','Upload requirements'],
                             ['3','Payment','Make the payment'],
                             ['4','Confirmed','Official enrollment']
-                        ] as [$step,$title,$desc])
+                        ] as [$step, $title, $desc])
                             <div class="flex flex-col items-center text-center">
-                                <div class="w-16 h-16 rounded-full {{ $step <= 1 ? 'bg-green-700 text-white' : 'bg-white border-4 border-green-700 text-green-700' }} flex items-center justify-center text-xl font-bold shadow">
+                                <div class="w-16 h-16 rounded-full {{ $currentStep >= $step ? 'bg-green-700 text-white' : 'bg-white border-4 border-green-700 text-green-700' }} flex items-center justify-center text-xl font-bold shadow transition-colors duration-500">
                                     {{ $step }}
                                 </div>
                                 <p class="mt-4 font-semibold text-green-700">{{ $title }}</p>

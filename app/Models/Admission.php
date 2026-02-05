@@ -19,4 +19,9 @@ class Admission extends Model
     'applicant_photo', 'father_photo', 'mother_photo', 'guardian_photo', 
     'transferee_docs'
 ];
+
+public function user() {
+    return $this->belongsTo(User::class);
+}
+
 }

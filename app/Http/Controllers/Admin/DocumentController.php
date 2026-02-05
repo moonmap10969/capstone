@@ -30,9 +30,11 @@ class DocumentController extends Controller
             $statsQuery->where('type', $request->type);
         }
 
-        $totalPending = (clone $statsQuery)->where('approval_status', 'pending')->count();
-        $totalApproved = (clone $statsQuery)->where('approval_status', 'approved')->count();
-        $totalRejected = (clone $statsQuery)->where('approval_status', 'rejected')->count();
+       // app/Http/Controllers/Admin/DocumentController.php
+
+        $totalPending = (clone $statsQuery)->where('status', 'pending')->count();
+        $totalApproved = (clone $statsQuery)->where('status', 'approved')->count();
+        $totalRejected = (clone $statsQuery)->where('status', 'rejected')->count();
         $totalDocuments = (clone $statsQuery)->count();
 
         return view('admin.documents.index', compact(
@@ -57,7 +59,7 @@ class DocumentController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|string',
-            'approval_status' => 'nullable|string|in:pending,approved,rejected',
+            'status' => 'nullable|string|in:pending,approved,rejected',
         ]);
 
         Document::create($request->all());
@@ -77,7 +79,7 @@ class DocumentController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|string',
-            'approval_status' => 'nullable|string|in:pending,approved,rejected',
+            'status' => 'nullable|string|in:pending,approved,rejected',
         ]);
 
         $document->update($request->all());

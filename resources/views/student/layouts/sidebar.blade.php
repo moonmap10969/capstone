@@ -1,4 +1,4 @@
-<aside class="w-64 min-h-screen bg-[#057E2E] flex flex-col shadow-lg">
+<aside class="w-64 h-screen bg-[#057E2E] flex flex-col shadow-lg sticky top-0 overflow-y-auto">
 
     {{-- Profile Section --}}
     <div class="p-6 border-b border-white/20">
@@ -12,16 +12,19 @@
             </div>
 
             <h3 class="font-semibold text-white">
-                {{ auth()->user()->name ?? 'Maria Santos' }}
+                {{ auth()->user()->name ?? 'Guest User' }}
             </h3>
 
-            <p class="text-sm text-white/80">
-                {{ auth()->user()->grade_level }} - Section {{ auth()->user()->section }}
-            </p>
-            
-            <p class="text-xs text-white/60 mt-1">
-                Student ID: {{ auth()->user()->student_id }}
-            </p>
+            @auth
+                <p class="text-sm text-white/80 capitalize">
+                    {{ auth()->user()->year_level ?? 'Not Enrolled' }}
+                </p> 
+                <p class="text-xs text-white/60 mt-1">
+                    Student ID: {{ auth()->user()->studentNumber ?? 'Pending' }}
+                </p>
+            @else
+                <p class="text-xs text-white/60 mt-1">Please login to view ID</p>
+@endauth
 
             {{-- Logout Button --}}
             <form method="POST" action="{{ route('logout') }}" class="mt-4 flex justify-center">
@@ -42,16 +45,16 @@
             Dashboard
         </a>
 
-        <a href="{{ route('student.documents.index') }}"
+        {{-- <a href="{{ route('student.documents.index') }}"
            class="flex items-center gap-3 px-4 py-3 rounded-lg
            {{ request()->routeIs('student.documents.*') ? 'bg-white text-[#057E2E] font-bold shadow' : 'text-white hover:bg-white hover:text-[#057E2E]' }}">
             Documents
-        </a>
+        </a> --}}
 
-        <a href="{{ route('student.admissions.index') }}"
+        <a href="{{ route('student.schedule.index') }}"
            class="flex items-center gap-3 px-4 py-3 rounded-lg
-           {{ request()->routeIs('student.admissions.*') ? 'bg-white text-[#057E2E] font-bold shadow' : 'text-white hover:bg-white hover:text-[#057E2E]' }}">
-            Admissions
+           {{ request()->routeIs('student.schedule.*') ? 'bg-white text-[#057E2E] font-bold shadow' : 'text-white hover:bg-white hover:text-[#057E2E]' }}">
+            Schedule
         </a>
 
         <a href="{{ route('student.tuition.index') }}"

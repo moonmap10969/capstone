@@ -9,21 +9,11 @@ class Document extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'title',
-        'file_path',
-        'user_id',
-        'admission_id',
-        'type',
-    ];
+protected $fillable = ['user_id', 'file_name', 'file_path', 'type', 'status'];
 
-    public function user()
-    {
-        return $this->belongsTo(\App\Models\User::class);
-    }
-
-    public function admission()
-    {
-        return $this->belongsTo(\App\Models\Admission::class);
-    }
+public function user()
+{
+    return $this->belongsTo(User::class);
 }
+}
+

@@ -14,11 +14,13 @@ class Tuition extends Model
 
     // Mass assignable fields
     protected $fillable = [
-        'student_id',
-        'student_name',
+        'studentNumber',
+        'name',
         'amount',
         'status',
+        'reference_number',
         'payment_method',
+        'payment_proof',
         'approval_status',
     ];
 

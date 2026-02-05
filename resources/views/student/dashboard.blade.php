@@ -1,75 +1,176 @@
-@extends('student.layouts.sidebar')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal | Dashboard</title>
 
-@section('content')
-<main class="flex-1 ml-64 p-8 bg-gray-50 min-h-screen">
-    <div class="space-y-6 max-w-7xl mx-auto">
-        
-        {{-- Welcome Header --}}
-        <div class="bg-gradient-to-r from-[#057E2E] to-[#046324] rounded-2xl p-8 text-white shadow-lg shadow-green-900/10">
-            <h1 class="text-3xl font-bold">Welcome back, {{ Auth::user()->name }}!</h1>
-            <p class="text-white/80 mt-1 font-medium">Here's what's happening with your academics today.</p>
-        </div>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        {{-- Stats Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach($stats as $stat)
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center gap-4">
-                    <div class="p-3 rounded-xl bg-gray-50 {{ $stat['text_color'] }}">
-                        {!! $stat['icon'] !!}
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">{{ $stat['label'] }}</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stat['value'] }}</p>
-                    </div>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+
+<body class="min-h-screen flex bg-slate-50">
+
+    @include('student.layouts.sidebar')
+
+    <main class="flex-1 p-8 lg:p-12 overflow-y-auto">
+        <div class="max-w-6xl mx-auto space-y-10">
+
+            <!-- Header -->
+            <section class="relative overflow-hidden rounded-3xl bg-[#057E2E]  p-8 shadow-xl">
+                <div class="relative z-10">
+                    <h1 class="text-3xl font-semibold text-white tracking-tight">
+                        Welcome, {{ $user->name }}
+                    </h1>
+                    <p class="text-white mt-2 text-sm font-medium">
+                        Academic Year 2025–2026 · First Semester
+                    </p>
                 </div>
-            </div>
-            @endforeach
-        </div>
+                <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
+            </section>
 
-        {{-- Quick Links --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-50">
-                <h2 class="text-lg font-bold text-gray-800">Quick Actions</h2>
-            </div>
-            <div class="p-6">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    @foreach($quickLinks as $link)
-                    <a href="{{ route($link['route']) }}" class="flex items-center gap-3 p-4 rounded-xl bg-gray-50 hover:bg-green-50 hover:text-[#057E2E] transition-all group border border-transparent hover:border-green-100">
-                        <div class="text-gray-400 group-hover:text-[#057E2E]">
-                            {!! $link['icon'] !!}
-                        </div>
-                        <span class="font-bold text-gray-700 group-hover:text-[#057E2E]">{{ $link['label'] }}</span>
-                    </a>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        {{-- Announcements --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-50 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#057E2E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <h2 class="text-lg font-bold text-gray-800">Announcements</h2>
-            </div>
-            <div class="p-6 space-y-4">
-                @forelse($announcements as $announcement)
-                <div class="p-5 rounded-xl border border-gray-100 bg-white hover:border-green-100 hover:bg-green-50/30 transition-all">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-gray-800">{{ $announcement->title }}</h3>
-                        <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md uppercase tracking-tight">
-                            {{ $announcement->created_at->format('M d, Y') }}
+            <!-- Statistics -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                @foreach($stats as $stat)
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                        {{ $stat['label'] }}
+                    </p>
+                    <div class="mt-4 flex items-end justify-between">
+                        <h2 class="text-3xl font-bold text-slate-800">
+                            {{ $stat['value'] }}
+                        </h2>
+                        <span class="{{ $stat['color'] }} bg-slate-50 px-3 py-1 rounded-full text-xs font-semibold">
+                            Status
                         </span>
                     </div>
-                    <p class="text-sm text-gray-600 leading-relaxed">{{ $announcement->content }}</p>
                 </div>
-                @empty
-                <div class="text-center py-8 text-gray-400 italic">No new announcements today.</div>
-                @endforelse
-            </div>
+                @endforeach
+            </section>
+
+            <!-- Quick Actions -->
+            <section>
+                <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">
+                    Quick Actions
+                </h3>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+    <!-- Grades -->
+    <a href="{{ route('student.grades.index') }}"
+       class="group bg-white p-5 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center hover:border-emerald-500 transition">
+        <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center mb-3
+                    group-hover:bg-emerald-600 transition">
+            <svg class="w-5 h-5 text-emerald-600 group-hover:text-white" fill="none"
+                 stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M12 14l9-5-9-5-9 5 9 5z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M12 14l6.16-3.422A12.083 12.083 0 0112 21.5
+                         c-2.54 0-4.847-.65-6.16-1.922L12 14z" />
+            </svg>
         </div>
-    </div>
-</main>
-@endsection
+        <span class="text-sm font-medium text-slate-700">Grades</span>
+    </a>
+
+    <!-- Schedule -->
+    <a href="{{ route('student.schedule.index') }}"
+       class="group bg-white p-5 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center hover:border-emerald-500 transition">
+        <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mb-3
+                    group-hover:bg-emerald-600 transition">
+            <svg class="w-5 h-5 text-emerald-600 group-hover:text-white" fill="none"
+                 stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2
+                         2 0 002-2V7a2 2 0 00-2-2H5a2
+                         2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+        </div>
+        <span class="text-sm font-medium text-slate-700">Schedule</span>
+    </a>
+
+    <!-- Tuition -->
+    <a href="{{ route('student.tuition.index') }}"
+    class="group bg-white p-5 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center hover:border-emerald-500 transition">
+        <div class="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center mb-3
+                    group-hover:bg-emerald-600 transition">
+            <svg class="w-5 h-5 text-emerald-600 group-hover:text-white"
+                fill="none" stroke="currentColor" stroke-width="2"
+                viewBox="0 0 24 24">
+                <rect x="2" y="5" width="20" height="14" rx="2" ry="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="2" y1="10" x2="22" y2="10"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <span class="text-sm font-medium text-slate-700">Tuition</span>
+    </a>
+
+
+    <!-- Documents -->
+    <a href="{{ route('student.documents.index') }}"
+       class="group bg-white p-5 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center hover:border-emerald-500 transition">
+        <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center mb-3
+                    group-hover:bg-emerald-600 transition">
+            <svg class="w-5 h-5 text-emerald-600 group-hover:text-white" fill="none"
+                 stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M9 12h6m-6 4h6m2
+                         5H7a2 2 0 01-2-2V5a2
+                         2 0 012-2h5l5 5v11a2
+                         2 0 01-2 2z" />
+            </svg>
+        </div>
+        <span class="text-sm font-medium text-slate-700">Documents</span>
+    </a>
+
+</div>
+
+            </section>
+
+            {{-- <!-- Announcements -->
+            <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 class="text-lg font-semibold text-slate-800">
+                        Institutional Announcements
+                    </h3>
+                    <button class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
+                        View All
+                    </button>
+                </div>
+
+                <div class="divide-y divide-slate-100">
+                    @foreach($announcements as $announcement)
+                    <div class="p-6 hover:bg-slate-50 transition">
+                        <div class="flex gap-5">
+                            <div class="w-14 text-center">
+                                <span class="block text-xs font-semibold text-slate-400 uppercase">
+                                    {{ \Carbon\Carbon::parse($announcement['date'])->format('M') }}
+                                </span>
+                                <span class="block text-xl font-bold text-slate-700">
+                                    {{ \Carbon\Carbon::parse($announcement['date'])->format('d') }}
+                                </span>
+                            </div>
+
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-slate-800">
+                                    {{ $announcement['title'] }}
+                                </h4>
+                                <p class="text-sm text-slate-500 mt-1">
+                                    {{ $announcement['description'] }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </section> --}}
+
+        </div>
+    </main>
+</body>
+</html>

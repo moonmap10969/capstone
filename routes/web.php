@@ -2,242 +2,149 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Admin\{
+    UserController, 
+    AdminScheduleController, 
+    ReportController as AdminReportController, 
+    TuitionController as AdminTuitionController, 
+    DocumentController as AdminDocumentController, 
+    AdmissionController as AdminAdmissionController
+};
 
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
-use App\Http\Controllers\Admin\AdmissionController as AdminAdmissionController;
-use App\Http\Controllers\Admin\TuitionController as AdminTuitionController;
-use App\Http\Controllers\Student\TuitionController as StudentTuitionController;
-use App\Http\Controllers\Student\AdmissionController;
-use App\Http\Controllers\Auth\PasswordController as PasswordController;
-use App\Http\Controllers\Student\DocumentController;
-use App\Http\Controllers\Registrar\StudentController as RegistrarStudentController;
-use App\Http\Controllers\Registrar\AdmissionController as RegistrarAdmissionController;
-use App\Http\Controllers\Registrar\DocumentController as RegistrarDocumentController;
-use App\Http\Controllers\Registrar\TuitionController as RegistrarTuitionController;
-use App\Http\Controllers\Registrar\DashboardController;
-use App\Http\Controllers\Registrar\StudentController;
-use App\Http\Controllers\Registrar\GradesController;
-use App\Http\Controllers\Registrar\CurriculumController;
-use App\Http\Controllers\Registrar\SchedulingController;
-use App\Http\Controllers\Registrar\AttendanceController;
-use App\Http\Controllers\Registrar\EnrollmentController;
-use App\Http\Controllers\Admin\ReportController as AdminReportController;
-use App\Http\Controllers\Registrar\ReportController as RegistrarReportController;
+use App\Http\Controllers\Student\{
+    StudentDashboardController, AdmissionController, ScheduleController, DocumentController, TuitionController as StudentTuitionController
+};
+use App\Http\Controllers\Registrar\{
+    DashboardController as RegistrarDashboardController, EnrollmentController, StudentController, ReportController, GradesController, CurriculumController, SchedulingController, AttendanceController, DocumentController as RegistrarDocumentController, TuitionController as RegistrarTuitionController
+};
 
-use App\Http\Controllers\Registrar\ReportController;
-
-Route::prefix('registrar')->group(function () {
-    Route::get('enrollment-summary', [ReportController::class, 'enrollmentSummary'])
-        ->name('reports.enrollment-summary');
-
-    Route::get('payment-reports', [ReportController::class, 'paymentReports'])
-        ->name('reports.payment-reports');
-});
-
-Route::prefix('registrar')->group(function () {
-    Route::get('enrollment-summary', [ReportController::class, 'enrollmentSummary'])
-        ->name('reports.enrollment-summary');
-
-    Route::get('payment-reports', [ReportController::class, 'paymentReports'])
-        ->name('reports.payment-reports');
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| School Admin Routes (requires login & verified)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'verified'])->prefix('school-admin')->name('school-admin.')->group(function () {
-    Route::get('/', fn() => view('school-admin.index'))->name('index');
-    // Add more school admin resources if needed
-});
-
-/*
-|--------------------------------------------------------------------------
-| Class Adviser / Homeroom Teacher Routes (requires login & verified)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'verified'])->prefix('adviser')->name('adviser.')->group(function () {
-    Route::get('/', fn() => view('adviser.index'))->name('index');
-    // Add more adviser-specific routes here, e.g., students, grades
-});
-
-/*
------------------------------------------------------------------------
-| Class Adviser / Homeroom Teacher Routes (requires login & verified)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'verified'])->prefix('teacher')->name('teacher.')->group(function () {
-    Route::get('/', fn() => view('teacher.index'))->name('index');
-    // Add more adviser-specific routes here, e.g., students, grades
-});
-
-
-
-/*
-|--------------------------------------------------------------------------
-| Parent / Guardian Routes (requires login & verified)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->group(function () {
-    Route::get('/', fn() => view('parent.index'))->name('index');
-    // Add more parent-specific routes here, e.g., view child’s grades, tuition
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Registrar Routes (requires login & verified)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'verified'])
-    ->prefix('registrar')
-    ->name('registrar.')
-    ->group(function () {
-
-        Route::get('/', [DashboardController::class, 'index'])->name('index');
-
-        Route::resource('students', StudentController::class);
-
-  // Enrollment route named exactly registrar.enrollment
-  Route::get('enrollment', [EnrollmentController::class, 'index'])
-  ->name('enrollment'); // <-- this sets route name to registrar.enrollment
-  
-
-  Route::get('documents', [RegistrarDocumentController::class, 'index'])
-  ->name('documents'); // <-- this sets route name to registrar.enrollment
-
-  Route::get('tuition', [RegistrarTuitionController::class, 'index'])
-  ->name('tuition'); // <-- this sets route name to registrar.enrollment
-
-
-  Route::prefix('registrar')->group(function () {
-      // Enrollment Summary
-      Route::get('enrollment-summary', [ReportController::class, 'enrollmentSummary'])
-          ->name('reports.enrollment-summary');
-  
-      // Payment Reports
-      Route::get('payment-reports', [ReportController::class, 'paymentReports'])
-          ->name('reports.payment-reports');
-  });
-  
-});
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
 */
-
-
-
 Route::get('/', fn() => view('welcome'))->name('welcome');
 Route::get('/about', fn() => view('about'))->name('about');
 Route::get('/education', fn() => view('education'))->name('education');
 Route::get('/contact', fn() => view('contact'))->name('contact');
-
-// Public admissions page (no login required)
 Route::get('/admissions', fn() => view('admissions'))->name('admissions');
-Route::post('/admissions', [AdmissionController::class, 'store'])->name('admissions.store');
+
+
+ 
+Route::post('admissions', [DocumentController::class, 'store'])->name('admissions.store');
+Route::post('admissions', [AdmissionController::class, 'store'])->name('admissions.store');
+/*
+|--------------------------------------------------------------------------
+| Auth Routes
+|--------------------------------------------------------------------------
+*/
+Route::post('/logout', function () {
+    Auth::logout();
+    return redirect('/');
+})->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Student Routes (requires login & verified)
+| Student Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->group(function () {
-    Route::get('/dashboard', fn() => view('student.index'))->name('dashboard');
- 
-
-    // Dashboard
-    Route::get('/', fn() => view('student.index'))->name('index');
-    Route::get('/dashboard', fn() => view('student.index'))->name('dashboard');
-
+Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
+    //Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('student.dasboard');
     // Admissions
     Route::get('admissions', [AdmissionController::class, 'index'])->name('admissions.index');
     Route::get('admissions/create', [AdmissionController::class, 'create'])->name('admissions.create');
-    Route::post('admissions', [AdmissionController::class, 'store'])->name('admissions.store');
-
-    // Admission-specific documents (latest admission)
     Route::get('admissions/documents', [AdmissionController::class, 'documents'])->name('admissions.documents');
-    Route::post('admissions/documents/upload', [AdmissionController::class, 'uploadDocuments'])->name('admissions.documents.upload');
-
-    Route::get('admissions/payment', [AdmissionController::class, 'payment'])->name('admissions.payment');
-
-
-    // Extra student documents (general)
+  
+    // Tuition
+    Route::get('/tuition', [StudentTuitionController::class, 'index'])->name('tuition.index');
+    Route::post('/tuition', [StudentTuitionController::class, 'store'])->name('tuition.store');
+    
+    // Documents (Student Portal)
     Route::get('documents', [DocumentController::class, 'index'])->name('documents.index');
-    Route::post('documents/upload', [DocumentController::class, 'upload'])->name('documents.upload');
+    Route::post('documents/upload', [DocumentController::class, 'store'])->name('documents.upload');
+    Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 
-    // Tuitions & Reports
-    Route::get('tuition', [StudentTuitionController::class, 'index'])
-        ->name('tuition.index');
-
-
-    Route::get('grades', fn() => view('student.grades.index'))->name('grades.index');
+    // Protected Student Routes (Approved students only)
+    Route::middleware(['EnsureAdmissionApproved'])->group(function () {
+        Route::get('/', [StudentDashboardController::class, 'index'])->name('index');
+       Route::get('/dashboard', [ScheduleController::class, 'dashboard'])->name('dashboard');
+        Route::get('tuition', [StudentTuitionController::class, 'index'])->name('tuition.index');
+        Route::get('grades', fn() => view('student.grades.index'))->name('grades.index');
+        
+        // Corrected Schedule Route
+        Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
+    });
 });
 
-
-
-
-Route::get('/student/tuition', [StudentTuitionController::class, 'index'])
-    ->name('student.tuition.index');
 
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-    // Standard Resource Routes (index, create, store, edit, update, destroy)
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-     Route::get('/', fn() => view('admin.index'))->name('index');
+    Route::get('/', fn() => view('admin.index'))->name('index');
 
     Route::resource('users', UserController::class);
-    Route::resource('documents', AdminDocumentController::class);
     Route::resource('admissions', AdminAdmissionController::class);
+    Route::resource('documents', AdminDocumentController::class);
     Route::resource('tuitions', AdminTuitionController::class);
-    Route::resource('reports', ReportController::class);
+    Route::resource('reports', AdminReportController::class);
+    Route::resource('schedule', AdminScheduleController::class);
 
     // Approvals
+    Route::patch('admissions/{admission}/approve', [AdminAdmissionController::class, 'approve'])->name('admissions.approve');
+    Route::patch('admissions/{admission}/reject', [AdminAdmissionController::class, 'reject'])->name('admissions.reject');
     Route::patch('documents/{document}/approve', [AdminDocumentController::class, 'approve'])->name('documents.approve');
     Route::patch('documents/{document}/reject', [AdminDocumentController::class, 'reject'])->name('documents.reject');
-    Route::patch('tuitions/{tuition}/approve', [AdminTuitionController::class, 'approve'])->name('tuitions.approve');
-    Route::patch('tuitions/{tuition}/reject', [AdminTuitionController::class, 'reject'])->name('tuitions.reject');
-    Route::patch('admissions/{admission}/approve', [AdminAdmissionController::class, 'approve'])->name('admissions.approve');
-    Route::patch('admissions/{admission}/reject', [AdminAdmissionController::class, 'reject'])->name('admissions.reject');
-    
-    Route::resource('admissions', AdminAdmissionController::class);
 
-    // Specific Action Routes for FUMCES Admission Workflow
-    // These must use PATCH to match your <button> methods
-    Route::patch('admissions/{admission}/approve', [AdminAdmissionController::class, 'approve'])->name('admissions.approve');
-    Route::patch('admissions/{admission}/reject', [AdminAdmissionController::class, 'reject'])->name('admissions.reject');
-    
-    // Resource routes for other modules
-    Route::resource('users', UserController::class);
-    Route::resource('documents', AdminDocumentController::class);
-    Route::resource('tuitions', AdminTuitionController::class);
+    // Schedule
+    Route::get('/admin/schedule', [AdminScheduleController::class, 'index'])->name('admin.schedule.index');
+    Route::get('/admin/schedule/create', [AdminScheduleController::class, 'create'])->name('admin.schedule.create');
+    Route::post('/admin/schedule', [AdminScheduleController::class, 'store'])->name('admin.schedule.store');
+    Route::get('/admin/schedule/{schedule}/edit', [AdminScheduleController::class, 'edit'])->name('admin.schedule.edit');
+    Route::put('/admin/schedule/{schedule}', [AdminScheduleController::class, 'update'])->name('admin.schedule.update');
+    Route::delete('/admin/schedule/{schedule}', [ScheduleController::class, 'destroy'])->name('admin.schedule.destroy');
 });
-
-
 
 /*
 |--------------------------------------------------------------------------
-| Auth Routes
+| Registrar Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->post('/logout', function () {
-    Auth::logout();
-    return redirect('/');
-})->name('logout');
+Route::middleware(['auth', 'verified'])->prefix('registrar')->name('registrar.')->group(function () {
+    Route::get('/', [RegistrarDashboardController::class, 'index'])->name('index');
+    
+    // Core Modules
+    Route::resource('students', RegistrarStudentController::class);
+    Route::get('enrollment', [EnrollmentController::class, 'index'])->name('enrollment');
+    Route::get('documents', [RegistrarDocumentController::class, 'index'])->name('documents');
+    
+    // Tuition Management (Standardized as Resource for Registrar)
+    Route::resource('tuitions', RegistrarTuitionController::class);
+    Route::patch('tuitions/{tuition}/approve', [RegistrarTuitionController::class, 'approve'])->name('tuitions.approve');
+    Route::patch('tuitions/{tuition}/reject', [RegistrarTuitionController::class, 'reject'])->name('tuitions.reject');
 
-// Define this separately so they can actually access it
-Route::middleware(['auth'])->group(function () {
-    Route::get('/change-password', [PasswordController::class, 'showChangeForm'])->name('password.change');
-    Route::post('/change-password', [PasswordController::class, 'updatePassword'])->name('password.update');
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function() {
+        Route::get('/enrollment-summary', [RegistrarReportController::class, 'enrollmentSummary'])->name('enrollment-summary');
+        Route::get('/payment-reports', [RegistrarReportController::class, 'paymentReports'])->name('payment-reports');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Specialized Role Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/school-admin', fn() => view('school-admin.index'))->name('school-admin.index');
+    Route::get('/adviser', fn() => view('adviser.index'))->name('adviser.index');
+    Route::get('/teacher', fn() => view('teacher.index'))->name('teacher.index');
+    Route::get('/parent', fn() => view('parent.index'))->name('parent.index');
 });
 
 require __DIR__ . '/auth.php';
-

@@ -10,49 +10,100 @@ use App\Models\Document;
 
 class DocumentController extends Controller
 {
-    /**
-     * Display a listing of the student's documents.
-     */
-public function index() {
-    $student = Auth::user();
-    // Retrieve documents linked to the student's admission record
-    $documents = $student->admissions()->with('documents')->get()->pluck('documents')->flatten();
-    
-    return view('student.documents.index', compact('documents'));
-}
-
-    /**
-     * Upload a new document for the student.
-     */
-    public function upload(Request $request)
+    // Show all documents for the student portal
+    public function index()
     {
-        $request->validate([
-            'file' => 'required|file|max:10240', // max 10MB
-            'title' => 'required|string|max:255',
-        ]);
-
         $student = Auth::user();
 
-        $path = $request->file('file')->store('student_documents');
+        // Fetch all documents (admissions + portal)
+        $documents = $student->documents;
 
-        $document = $student->documents()->create([
-            'title' => $request->title,
-            'file_path' => $path,
-        ]);
+        $totalRequired = 6;
 
-        return redirect()->route('student.documents.index')->with('success', 'Document uploaded successfully.');
+        $stats = [
+            'total'     => $totalRequired,
+            'submitted' => $documents->where('status', 'approved')->count(),
+            'pending'   => $documents->where('status', 'pending')->count(),
+            'rejected'  => $documents->where('status', 'rejected')->count(),
+        ];
+
+        $progress = ($stats['submitted'] / $totalRequired) * 100;
+
+        return view('student.documents.index', compact('documents', 'stats', 'progress'));
     }
 
-    /**
-     * Optional: Delete a student's document
-     */
+    // Handle uploads from BOTH admission form & student portal
+   public function store(Request $request)
+{
+    $student = Auth::user();
+
+    // Determine type: 'admission' if coming from admission form, else 'student_upload'
+    $type = $request->input('type') ?? 'student_upload';
+
+    // Admission form files
+    $admissionFiles = [
+        'report_card',
+        'birth_certificate',
+        'applicant_photo',
+        'father_photo',
+        'mother_photo',
+        'guardian_photo',
+        'transferee_docs'
+    ];
+
+    foreach ($admissionFiles as $fileKey) {
+        if ($request->hasFile($fileKey)) {
+            $file = $request->file($fileKey);
+            $path = $file->store('documents', 'public');
+
+            Document::updateOrCreate(
+                ['user_id' => $student->id, 'file_name' => $fileKey], // use file_name
+                [
+                    'file_path' => $path,
+                    'status'    => 'pending',
+                    'type'      => $type,
+                ]
+            );
+        }
+    }
+
+    // Student portal single file upload
+    if ($request->hasFile('file') && $request->has('file_name')) {
+        $file = $request->file('file');
+        $path = $file->store('documents', 'public');
+
+        Document::updateOrCreate(
+            ['user_id' => $student->id, 'file_name' => $request->file_name],
+            [
+                'file_path' => $path,
+                'status'    => 'pending',
+                'type'      => $type,
+            ]
+        );
+    }
+
+    $message = $type === 'admission'
+        ? 'Admission documents uploaded successfully.'
+        : 'Document uploaded successfully.';
+
+    return back()->with('success', $message);
+}
+
+    // Delete a document
     public function destroy(Document $document)
     {
-        $this->authorize('delete', $document); // ensure student owns the document
+        $student = Auth::user();
 
-        Storage::delete($document->file_path);
+        if ($document->user_id !== $student->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        if ($document->file_path) {
+            Storage::disk('public')->delete($document->file_path);
+        }
+
         $document->delete();
 
-        return redirect()->route('student.documents.index')->with('success', 'Document deleted successfully.');
+        return back()->with('success', 'Document deleted successfully.');
     }
 }

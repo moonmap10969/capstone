@@ -8,7 +8,8 @@ use App\Models\Admission;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\StudentNumberGenerated;
 use App\Mail\AdmissionRejectedMail;
-
+use App\Models\Document;
+use App\Mail\AdmissionApprovedMail;
 class AdmissionController extends Controller
 {
   public function index()
@@ -33,23 +34,32 @@ class AdmissionController extends Controller
         return view('admin.admissions.show', compact('admission'));
     }
 
-    public function approve(Admission $admission)
-    {
-        $studentNumber = date('Y') . str_pad($admission->id, 5, '0', STR_PAD_LEFT);
-        
-        $admission->update([
-            'status' => 'approved',
-            'student_number' => $studentNumber,
-            'password' => bcrypt($studentNumber),
-        ]);
+        public function approve(Admission $admission) {
+            $user = $admission->user;
 
-        Mail::to($admission->email)->send(new StudentNumberGenerated($studentNumber));
+            // Update Admission status
+            $admission->update(['status' => 'approved']);
 
-        return back()->with('success', "Student approved. Number: $studentNumber");
-    }
+            // Generate Student Number
+            $studentNumber = now()->year . str_pad($user->id, 4, '0', STR_PAD_LEFT);
 
-   public function reject(Admission $admission) {
-    $admission->update(['status' => 'rejected']);
+            // Update User: Set is_approved to true AND change role to student
+            $user->update([
+                'is_approved' => true,
+                'role' => 'student', // Critical fix
+                'studentNumber' => $studentNumber,
+                'year_level' => $admission->year_level,
+            ]);
+                    
+
+                Mail::to($user->email)->send(new \App\Mail\AdmissionApprovedMail($studentNumber, $user));
+                    
+                    return back()->with('success', 'Admission approved, Student ID generated, and documents synced.');
+              }
+                       
+
+    public function reject(Admission $admission) {
+        $admission->update(['status' => 'rejected']);
 
     $details = [
         'subject' => 'Notification Regarding Your Admission Application',

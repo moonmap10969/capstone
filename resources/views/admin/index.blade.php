@@ -11,7 +11,7 @@
 
     <!-- Sidebar -->
 
-    @include('layouts.sidebar')
+    @include('admin.layouts.sidebar')
     <!-- Main Content -->
     <main class="flex-1 p-8">
         <!-- Header -->

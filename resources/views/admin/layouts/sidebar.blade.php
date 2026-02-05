@@ -56,6 +56,12 @@
            {{ request()->routeIs('admin.tuitions.*') ? 'bg-white text-[#057E2E] font-bold shadow' : 'text-white hover:bg-white hover:text-[#057E2E]' }}">
             Tuitions
         </a>
+        
+        <a href="{{ route('admin.schedule.index') }}"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg
+           {{ request()->routeIs('admin.schedule.*') ? 'bg-white text-[#057E2E] font-bold shadow' : 'text-white hover:bg-white hover:text-[#057E2E]' }}">
+            Schedule
+        </a>
 
         <a href="{{ route('admin.reports.index') }}"
            class="flex items-center gap-3 px-4 py-3 rounded-lg

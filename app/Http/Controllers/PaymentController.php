@@ -1,45 +1,40 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Student;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Fixes the "Undefined type 'DB'" error
+use Illuminate\Support\Facades\Storage;
+use App\Models\Payment;
 
 class PaymentController extends Controller
 {
-    public function store(Request $request)
-{
-    // 1. Validate the form inputs
-    $request->validate([
-        'student_number' => 'required',
-        'reference_number' => 'required|unique:payments,reference_number',
-        'amount' => 'required|numeric|min:1',
-        'payment_method' => 'required',
-        'receipt' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-    ]);
+    public function submit(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string', // updated field name
+            'reference_number' => 'nullable|string|max:255', // reference can be optional
+            'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
 
-    // 2. Handle the file upload
-    $path = $request->file('receipt')->store('receipts', 'public');
+        $student = Auth::user();
 
-   
-   DB::table('payments')->insert([
-    'student_number'   => $request->student_number,
-    'reference_number' => $request->reference_number,
-    'amount'           => $request->amount,
-    'payment_method'   => $request->payment_method,
-    'description'      => $request->description,
-    'receipt_path'     => $path,
-    'status'           => 'pending',
-    'created_at'       => now(),
-    'updated_at'       => now(),
-]);
+        $payment = new Payment();
+        $payment->studentNumber = $student->studentNumber; // updated column
+        $payment->name = $student->name; // updated column
+        $payment->payment_method = $request->payment_method;
+        $payment->amount = $request->amount;
+        $payment->reference_number = $request->reference_number ?? null;
+        $payment->status = 'pending';
 
-    // 4. Update the total tuition amount (or paid_amount)
-    DB::table('tuitions')
-        ->where('student_number', $request->student_number)
-        ->increment('amount', $request->amount);
+        if ($request->hasFile('payment_proof')) {
+            $payment->receipt_path = $request->file('payment_proof')->store('payment_proofs', 'public'); // updated column
+        }
 
-    return redirect()->route('student.tuitions.index')->with('success', 'Payment submitted for verification!');
-}
+        $payment->save();
+
+        return redirect()->back()->with('success', 'Payment submitted successfully!');
+    }
 }

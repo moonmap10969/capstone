@@ -25,8 +25,7 @@
         <div class="w-full max-w-md">
 
             <div class="text-center mb-6">
-                <img
-                    src="https://scontent.fmnl2-2.fna.fbcdn.net/v/t39.30808-6/308787211_474191617959376_4052700751878050898_n.jpg"
+                <img src="{{ asset('images/fumces_logo.jpg') }}"
                     class="w-24 h-24 mx-auto rounded-full mb-2"
                 >
                 <h1 class="text-2xl font-semibold text-green-700">Create Account</h1>

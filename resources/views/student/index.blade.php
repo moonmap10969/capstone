@@ -30,7 +30,7 @@
             <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
                 <h2 class="text-sm text-gray-500 uppercase tracking-wide">Admission Status</h2>
                 <p class="mt-2 text-2xl font-bold text-green-700">
-                    {{ auth()->user()->admission_status ?? 'Pending' }}
+                    {{ auth()->user()->admission->status ?? 'No Application' }}
                 </p>
             </div>
 

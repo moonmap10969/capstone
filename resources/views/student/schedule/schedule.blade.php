@@ -1,4 +1,13 @@
-<title>Schedule - FUMCES</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex bg-gray-50">
+
 
 <!-- Sidebar -->
 @include('layouts.sidebar')
