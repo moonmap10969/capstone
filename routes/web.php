@@ -18,6 +18,7 @@ use App\Http\Controllers\Student\{
 use App\Http\Controllers\Admissions\AdmissionsAdmissionController;
 use App\Http\Controllers\Registrar\{
     DashboardController as RegistrarDashboardController, EnrollmentController, SectionController,
+    ClassListController,
     StudentController as RegistrarStudentController, ReportController as RegistrarReportController,
     GradesController, CurriculumController, SchedulingController, AttendanceController, 
     DocumentController as RegistrarDocumentController, TuitionController as RegistrarTuitionController
@@ -33,8 +34,8 @@ Route::get('/', fn() => view('welcome'))->name('welcome');
 Route::get('/about', fn() => view('about'))->name('about');
 Route::get('/education', fn() => view('education'))->name('education');
 Route::get('/contact', fn() => view('contact'))->name('contact');
+Route::get('/admissions-info', fn() => view('admissions'))->name('admissions');
 Route::get('/student/admissions-info', [AdmissionController::class, 'index'])->name('public.admissions');
-Route::post('/student/admissions-info', [AdmissionController::class, 'store'])->name('admissions.store');
 /*
 |--------------------------------------------------------------------------
 | Student Routes
@@ -98,6 +99,10 @@ Route::middleware(['auth', 'verified', 'role:registrar'])->prefix('registrar')->
     Route::resource('tuitions', RegistrarTuitionController::class);
     Route::resource('sections', SectionController::class);
     Route::patch('tuitions/{tuition}/approve', [RegistrarTuitionController::class, 'approve'])->name('tuitions.approve');
+
+    Route::get('/classlist', [ClassListController::class, 'index'])->name('classlist.index');
+    Route::get('/classlist/{section}/export', [ClassListController::class, 'export'])->name('classlist.export');
+    Route::get('/classlist/{section}/download', [ClassListController::class, 'downloadPdf'])->name('classlist.download');
 
 Route::prefix('reports')->name('')->group(function() {
     Route::get('/enrollment-summary', [RegistrarReportController::class, 'enrollmentSummary'])->name('reports.enrollment-summary');

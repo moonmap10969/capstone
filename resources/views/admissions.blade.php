@@ -60,7 +60,7 @@
     <div class="min-h-screen bg-gray-50 text-gray-900 font-sans">
         <section class="py-24" id="enrollment-form">
             <div class="container mx-auto px-4 max-w-4xl">
-                <form id="admissionForm" action="{{ route('student.admissions.store') }}" method="POST" enctype="multipart/form-data">
+                <form id="admissionForm" action="{{ route('admissions.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
                     <input type="hidden" name="type" value="admission">
@@ -82,9 +82,11 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2">Grade Applying For *</label>
-                                <select name="year_level" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-700 outline-none" required>
+                               <select name="year_level" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-700 outline-none" required>
                                     <option value="">Select a grade</option>
-                                    <option value="kindergarten">Kindergarten</option>
+                                    <option value="kinder1">Kinder 1</option>
+                                    <option value="kinder2">Kinder 2</option>
+                                    <option value="kinder3">Kinder 3</option>
                                     @for($i=1; $i<=10; $i++)
                                         <option value="grade{{$i}}">Grade {{$i}}</option>
                                     @endfor

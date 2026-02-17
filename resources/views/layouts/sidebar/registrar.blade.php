@@ -44,6 +44,12 @@
         {{ request()->routeIs('registrar.sections.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10 hover:text-white' }}">
             <span>Sections</span>
         </a>
+
+         <a href="{{ route('registrar.classlist.index') }}" 
+        class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
+        {{ request()->routeIs('registrar.classlist.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10 hover:text-white' }}">
+            <span>Class List</span>
+        </a>
         
       <a href="{{ route('registrar.tuitions.index') }}" 
          class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition

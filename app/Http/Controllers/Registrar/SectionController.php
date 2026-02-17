@@ -10,7 +10,8 @@ class SectionController extends Controller
 {
     public function index()
     {
-        $sections = Section::all();
+        // Added withCount to fetch the number of students in each section
+        $sections = Section::withCount('enrollments')->get();
         return view('registrar.sections.index', compact('sections'));
     }
 
@@ -23,7 +24,6 @@ class SectionController extends Controller
             'year_level' => 'required|string'
         ]);
 
-        // The Model Mutator handles 'Grade 10' -> 'grade10' automatically
         Section::create($validated);
 
         return redirect()->route('registrar.sections.index')

@@ -45,7 +45,7 @@ class AdmissionsAdmissionController extends Controller
         }
 
         // 3. Generate Student Number (Logic merged)
-        $studentNumber = 'SN-' . date('Y') . '-' . str_pad($admission->id, 4, '0', STR_PAD_LEFT);
+        $studentNumber = date('Y') . str_pad($admission->id, 6, '0', STR_PAD_LEFT);
 
         // 4. Update Admission status and save the ID
         $admission->update([
