@@ -75,7 +75,7 @@
                     
                     {{-- Grades 1-7: lowercase and no spaces --}}
                     @foreach([1, 2, 3, 4, 5, 6, 7] as $g)
-                        <option value="grade{{ $g }}" {{ old('year_level') == "grade$g" ? 'selected' : '' }}>Grade {{ $g }}</option>
+                        <option value="grade{{ $g }}" {{ old('year_level') == "grade $g" ? 'selected' : '' }}>Grade {{ $g }}</option>
                     @endforeach
                 </select>
             </div>
@@ -125,3 +125,25 @@
         }
     });
 </script>
+@if(session('conflict_popup'))
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        Swal.fire({
+            title: '<span style="color: #b91c1c">Scheduling Conflict</span>',
+            icon: 'warning',
+            html: `
+                <div style="text-align: left; background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fee2e2;">
+                    <p><strong>Teacher:</strong> {{ session('conflict_popup')['teacher'] }}</p>
+                    <p><strong>Subject:</strong> {{ session('conflict_popup')['subject'] }}</p>
+                    <p><strong>Room:</strong> {{ session('conflict_popup')['room'] }}</p>
+                    <p><strong>Time:</strong> {{ session('conflict_popup')['time'] }}</p>
+                </div>
+                <p style="margin-top: 15px; font-size: 0.9em; color: #666;">Please adjust the time or room to resolve this.</p>
+            `,
+            confirmButtonText: 'Got it',
+            confirmButtonColor: '#15803d',
+            background: '#ffffff',
+            showClass: { popup: 'animate__animated animate__fadeInDown' }
+        });
+    </script>
+@endif

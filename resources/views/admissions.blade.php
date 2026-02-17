@@ -29,14 +29,14 @@
         </div>
     
         <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          @php
+            @php
             $steps = [
-              ['title' => 'Complete Application', 'icon' => 'M3 7h18M3 12h18M3 17h18'],
-              ['title' => 'Submit Documents', 'icon' => 'M12 4v16m8-8H4'],
-              ['title' => 'Document Verification', 'icon' => 'M5 13l4 4L19 7'],
-              ['title' => 'Welcome to FUMCES!', 'icon' => 'M12 2a10 10 0 100 20 10 10 0 000-20z']
+                ['title' => 'Complete Application', 'icon' => 'M3 7h18M3 12h18M3 17h18'],
+                ['title' => 'On-site Submission & Interview', 'icon' => 'M12 4v16m8-8H4'], // Updated
+                ['title' => 'Fee Payment & Verification', 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'], // Updated
+                ['title' => 'Welcome to FUMCES!', 'icon' => 'M5 13l4 4L19 7']
             ];
-          @endphp
+            @endphp
     
           @foreach($steps as $index => $step)
           <div class="relative bg-white rounded-3xl p-6 shadow-md hover:shadow-lg transition-transform transform hover:-translate-y-1">
@@ -60,7 +60,7 @@
     <div class="min-h-screen bg-gray-50 text-gray-900 font-sans">
         <section class="py-24" id="enrollment-form">
             <div class="container mx-auto px-4 max-w-4xl">
-                <form id="admissionForm" action="{{ route('admissions.store') }}" method="POST" enctype="multipart/form-data">
+                <form id="admissionForm" action="{{ route('student.admissions.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
                     <input type="hidden" name="type" value="admission">
@@ -168,9 +168,9 @@
                   </div>
 
 
-                    <button type="button" id="submitBtn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-green-700 font-bold py-4 rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1">
-                        SUBMIT APPLICATION
-                    </button>
+<button type="submit" id="submitBtn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-green-700 font-bold py-4 rounded-xl shadow-md transition-all">
+    SUBMIT APPLICATION
+</button>
                 </form>
             </div>
         </section>
@@ -212,5 +212,6 @@
         @endauth
     });
   </script>
+  
 </body>
 </html>

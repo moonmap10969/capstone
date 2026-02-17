@@ -12,7 +12,7 @@
 <body class="min-h-screen flex bg-gray-50">
 
     {{-- Sidebar --}}
-    @include('layouts.sidebar')
+    @include('admin.layouts.sidebar')
 
     {{-- Main Content --}}
     <main class="flex-1 p-8">

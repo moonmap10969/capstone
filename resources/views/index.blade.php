@@ -184,6 +184,7 @@
         filterInput.addEventListener('input', filterRows);
         gradeFilter.addEventListener('change', filterRows);
     </script>
+    
 
 </body>
 </html>

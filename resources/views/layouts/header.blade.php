@@ -12,7 +12,7 @@
         <!-- Center: Navigation Links -->
         <nav class="flex gap-6 items-center mx-auto">
             <a href="/" class="transition-all duration-200 hover:font-bold">Home</a>
-            <a href="/admissions" class="transition-all duration-200 hover:font-bold">Admissions</a>
+            <a href="/admissions-info" class="transition-all duration-200 hover:font-bold">Admissions</a>
             <a href="/education" class="transition-all duration-200 hover:font-bold">Education</a>
             <a href="/about" class="transition-all duration-200 hover:font-bold">About</a>
             <a href="/contact" class="transition-all duration-200 hover:font-bold">Contact</a>
@@ -35,7 +35,7 @@
             $portalRoute = match ($role) {
                 'admin' => route('admin.index'),
                 'teacher' => route('teacher.index'),
-                'student' => route('student.index'),
+                'student' => route('student.dashboard'),
                 'parent' => route('parent.index'),
                 'registrar' => route('registrar.index'),
                 default => route('welcome'),

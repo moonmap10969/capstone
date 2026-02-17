@@ -11,23 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('admissions', function (Blueprint $table) {
-            $table->id();
-            $table->string('student_name');
-            $table->string('email');
-            $table->string('status')->default('pending');
-            $table->timestamps();
-        });
-        
-        
+            Schema::table('enrollments', function (Blueprint $table) {
+        $table->dropForeign(['section_id']);
+        $table->foreign('section_id')->references('id')->on('sections');
+    });
     }
-    
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('grades');
+        Schema::table('reference_id', function (Blueprint $table) {
+            //
+        });
     }
 };

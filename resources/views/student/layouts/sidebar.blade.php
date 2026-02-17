@@ -12,8 +12,10 @@
             </div>
 
             <h3 class="font-semibold text-white">
-                {{ auth()->user()->name ?? 'Guest User' }}
+                {{ auth()->user()->admission->studentFirstName ?? '' }}
+                {{ auth()->user()->admission->studentLastName ?? '' }}
             </h3>
+
 
             @auth
                 <p class="text-sm text-white/80 capitalize">

@@ -12,7 +12,7 @@
 </head>
 <body class="min-h-screen flex bg-gray-100">
 
-    @include('layouts.sidebar')
+   @include('layouts.sidebar.admissions')
 
     <main class="flex-1 p-6">
 
@@ -31,7 +31,7 @@
         @endif
 
         {{-- Full Width Form --}}
-        <form action="{{ route('admin.admissions.store') }}" method="POST" class="bg-white shadow rounded-lg p-6 w-full">
+        <form action="{{ route('admissions.admissions.store') }}" method="POST" class="bg-white shadow rounded-lg p-6 w-full">
             @csrf
 
             {{-- Student Name --}}
@@ -67,9 +67,6 @@
         <option value="Grade 8" {{ old('year_level') == 'Grade 8' ? 'selected' : '' }}>Grade 8</option>
         <option value="Grade 9" {{ old('year_level') == 'Grade 9' ? 'selected' : '' }}>Grade 9</option>
         <option value="Grade 10" {{ old('year_level') == 'Grade 10' ? 'selected' : '' }}>Grade 10</option>
-        <!-- Senior High -->
-        <option value="Grade 11" {{ old('year_level') == 'Grade 11' ? 'selected' : '' }}>Grade 11</option>
-        <option value="Grade 12" {{ old('year_level') == 'Grade 12' ? 'selected' : '' }}>Grade 12</option>
     </select>
 </div>
 
@@ -93,7 +90,7 @@
 
             {{-- Buttons --}}
             <div class="flex justify-end gap-2">
-                <a href="{{ route('admin.admissions.index') }}" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</a>
+                <a href="{{ route('admissions.admissions.index') }}" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</a>
                 <button type="submit" class="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800">Add Admission</button>
             </div>
         </form>

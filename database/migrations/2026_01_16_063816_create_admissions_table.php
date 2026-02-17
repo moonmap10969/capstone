@@ -24,9 +24,9 @@ public function up(): void
         $table->string('email');
         $table->string('phone');
         $table->string('address'); 
-        $table->string('city'); // Added to match your controller
-        $table->string('state'); // Added to match your controller
-        $table->string('zipCode'); // Added to match your controller
+        $table->string('city'); 
+        $table->string('state'); 
+        $table->string('zipCode'); 
         $table->string('street'); 
         $table->string('zip');    
         $table->string('status')->default('pending');

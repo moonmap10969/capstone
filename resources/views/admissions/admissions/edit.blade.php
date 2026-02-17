@@ -9,7 +9,7 @@
 <body class="min-h-screen flex bg-gray-100">
 
     {{-- Sidebar --}}
-    @include('layouts.sidebar')
+  @include('layouts.sidebar.admissions')
 
     {{-- Main Content --}}
     <main class="flex-1 p-8">

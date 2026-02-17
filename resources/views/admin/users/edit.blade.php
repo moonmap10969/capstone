@@ -9,7 +9,7 @@
 <body class="min-h-screen flex bg-gray-100">
 
     {{-- Sidebar --}}
-    @include('layouts.sidebar')
+    @include('admin.layouts.sidebar')
 
     {{-- Main Content --}}
     <main class="flex-1 p-8">
@@ -61,6 +61,8 @@
         <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
         <option value="registrar" {{ old('role', $user->role) == 'registrar' ? 'selected' : '' }}>Registrar</option>
         <option value="student" {{ old('role', $user->role) == 'student' ? 'selected' : '' }}>Student</option>
+        <option value="teacher" {{ old('role', $user->role) == 'teacher' ? 'selected' : '' }}>Cashier</option>
+        <option value="teacher" {{ old('role', $user->role) == 'teacher' ? 'selected' : '' }}>Admissions</option>
         <option value="teacher" {{ old('role', $user->role) == 'teacher' ? 'selected' : '' }}>Teacher</option>
     </select>
     <!-- Custom dropdown arrow -->

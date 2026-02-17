@@ -54,7 +54,7 @@
     <nav class="flex-1 overflow-y-auto p-4 text-sm space-y-1">
 
         <!-- Dashboard -->
-        <a href="#" class="flex items-center gap-2 bg-white text-[#057E2E] font-bold rounded-lg px-4 py-2 shadow-md">
+        <a href="#" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
             <span>Dashboard</span>
         </a>
 
@@ -63,19 +63,21 @@
             <span>Class List</span>
         </a>
 
-        <!-- Grade Entry -->
-        <a href="#" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
-            <span>Grade Entry</span>
+        <!-- Grades -->
+            <a href="{{ route('teacher.grades.index') }}"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
+                <span>Grades</span>
+            </a>
+
+
+        <!-- Schedule  -->
+        <a href="{{ route('teacher.schedule.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
+            <span>Schedule</span>
         </a>
 
-        <!-- Quarterly Grades -->
-        <a href="#" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
-            <span>Quarterly Grades</span>
-        </a>
-
-        <!-- Grades Reports -->
-        <a href="#" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
-            <span>Grades Reports</span>
+        <!-- Lessons -->
+        <a href="{{ route('teacher.lessons.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
+            <span>Lessons</span>
         </a>
 
     </nav>

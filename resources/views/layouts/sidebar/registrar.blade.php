@@ -1,4 +1,4 @@
-<aside class="w-64 min-h-screen bg-[#057E2E] flex flex-col shadow-lg">
+<aside class="sticky top-0 h-screen w-64 bg-[#057E2E] flex flex-col shadow-lg">
 
   <div class="p-6 border-b border-white/20 text-center space-y-3">
       <div class="w-16 h-16 mx-auto rounded-full bg-white flex items-center justify-center mb-1 shadow-md">
@@ -33,18 +33,18 @@
           <span>Dashboard</span>
       </a>
 
-      <a href="{{ route('registrar.enrollment') }}" 
+      <a href="{{ route('registrar.enrollment.index') }}" 
          class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
          {{ request()->routeIs('registrar.enrollment') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10 hover:text-white' }}">
           <span>Enrollment</span>
       </a>
 
-      <a href="{{ route('registrar.documents') }}" 
-         class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-         {{ request()->routeIs('registrar.documents') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10 hover:text-white' }}">
-          <span>Documents</span>
-      </a>
-
+        <a href="{{ route('registrar.sections.index') }}" 
+        class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
+        {{ request()->routeIs('registrar.sections.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10 hover:text-white' }}">
+            <span>Sections</span>
+        </a>
+        
       <a href="{{ route('registrar.tuitions.index') }}" 
          class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
          {{ request()->routeIs('registrar.tuitions.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10 hover:text-white' }}">
