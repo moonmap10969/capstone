@@ -10,24 +10,54 @@ use Illuminate\Support\Facades\Storage;
 
 class TuitionController extends Controller
 {
-    public function index()
-    {
-        $tuitions = Tuition::orderBy('id', 'asc')->paginate(10);
+public function index()
+{
+    $tuitions = Tuition::orderBy('id', 'asc')->paginate(10);
 
-        $totalPending      = Tuition::where('status', 'pending')->count();
-        $paymentsPartial   = Tuition::where('payment_type', 'partial')->count();
-        $paymentsCompleted = Tuition::where('payment_type', 'paid')->count();
-        $totalStudents     = Tuition::distinct('studentNumber')->count();
+    $totalPending = Tuition::where('status', 'pending')->count();
+    $paymentsPartial = Tuition::where('payment_type', 'partial')->where('status', 'approved')->count();
+    $paymentsCompleted = Tuition::whereIn('payment_type', ['paid', 'full'])->where('status', 'approved')->count();
+    $totalStudents = Tuition::distinct('studentNumber')->count('studentNumber');
 
-        // Updated view path to registrar
-        return view('registrar.tuitions.index', compact(
-            'tuitions',
-            'totalPending',
-            'paymentsPartial',
-            'paymentsCompleted',
-            'totalStudents'
-        ));
-    }
+    // Fully Paid Students grouped by student
+    $fullyPaid = Tuition::select('studentNumber', 'name')
+        ->where('status', 'approved')
+        ->whereIn('payment_type', ['paid', 'full'])
+        ->groupBy('studentNumber', 'name')
+        ->get()
+        ->map(function($t) {
+            $t->amount = Tuition::where('studentNumber', $t->studentNumber)
+                                ->where('status', 'approved')
+                                ->sum('amount');
+            $t->payment_type = 'Paid';
+            return $t;
+        });
+
+    // Students With Balance grouped by student
+    $withBalance = Tuition::select('studentNumber', 'name')
+        ->where('status', 'approved')
+        ->where('payment_type', 'partial')
+        ->groupBy('studentNumber', 'name')
+        ->get()
+        ->map(function($t) {
+            $t->amount = Tuition::where('studentNumber', $t->studentNumber)
+                                ->where('status', 'approved')
+                                ->sum('amount');
+            $t->balance = 15738 - $t->amount; // adjust as needed
+            $t->payment_type = 'Partial';
+            return $t;
+        });
+
+    return view('registrar.tuitions.index', compact(
+        'tuitions',
+        'totalPending',
+        'paymentsPartial',
+        'paymentsCompleted',
+        'totalStudents',
+        'fullyPaid',
+        'withBalance'
+    ));
+}
 
     public function store(Request $request)
     {

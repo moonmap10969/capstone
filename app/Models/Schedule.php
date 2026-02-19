@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,7 +8,11 @@ class Schedule extends Model
 {
     use HasFactory;
 
+    // Disable auto-incrementing since your table lacks it
+    public $incrementing = false;
+
     protected $fillable = [
+        'id', // Required to save manual IDs
         'subject',
         'teacher',
         'day_of_week',

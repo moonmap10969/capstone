@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Curriculum</title>
+    <title>Edit Schedule | Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -12,7 +12,6 @@
 </head>
 <body class="min-h-screen flex bg-gray-50">
 
-    {{-- Sidebar --}}
     @include('admin.layouts.sidebar')
 
     <main class="flex-1 p-6 lg:p-10 w-full overflow-y-auto bg-gray-50">
@@ -62,20 +61,24 @@
                     </select>
                 </div>
 
-            <div class="space-y-2">
-                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Grade Level</label>
-                <select name="year_level" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all">
-                    {{-- Map Kinder levels to negative integers or 0 to satisfy the integer requirement --}}
-                    <option value="-2" {{ old('year_level') == -2 ? 'selected' : '' }}>Kinder 1</option>
-                    <option value="-1" {{ old('year_level') == -1 ? 'selected' : '' }}>Kinder 2</option>
-                    <option value="0" {{ old('year_level') == 0 ? 'selected' : '' }}>Kinder 3</option>
-                    
-                    {{-- Standard Grades 1-7 --}}
-                    @foreach([1, 2, 3, 4, 5, 6, 7] as $g)
-                        <option value="{{ $g }}" {{ old('year_level') == $g ? 'selected' : '' }}>Grade {{ $g }}</option>
-                    @endforeach
-                </select>
-            </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Grade Level</label>
+                    <select name="year_level" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all">
+                        @php
+                            $levels = [
+                                -2 => 'Kinder 1', -1 => 'Kinder 2', 0 => 'Kinder 3',
+                                1 => 'Grade 1', 2 => 'Grade 2', 3 => 'Grade 3', 4 => 'Grade 4',
+                                5 => 'Grade 5', 6 => 'Grade 6', 7 => 'Grade 7', 8 => 'Grade 8',
+                                9 => 'Grade 9', 10 => 'Grade 10'
+                            ];
+                        @endphp
+                        @foreach($levels as $val => $label)
+                            <option value="{{ $val }}" {{ (string)old('year_level', $schedule->year_level) === (string)$val ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Section</label>
@@ -118,3 +121,5 @@
         }
     });
 </script>
+</body>
+</html>

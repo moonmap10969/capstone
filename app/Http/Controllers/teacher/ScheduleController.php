@@ -3,20 +3,35 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Schedule;
-use Illuminate\Support\Facades\Auth; // 1. Add this import at the top
+use App\Models\Section;
+use App\Models\Enrollment;
+use Illuminate\Support\Facades\Auth;
 
 class ScheduleController extends Controller
 {
     public function index()
-    {
-        // 2. Use Auth::user()->name instead of the helper
-        $schedules = Schedule::where('teacher', Auth::user()->name) 
-            ->orderByRaw("FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')")
-            ->orderBy('start_time')
-            ->get();
+{
+    $teacherName = Auth::user()->name;
 
-        return view('teacher.schedule.index', compact('schedules'));
-    }
+    $schedules = Schedule::where('teacher', $teacherName)
+        ->orderByRaw("FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')")
+        ->orderBy('start_time')
+        ->get()
+        ->map(function ($entry) {
+            // Find the Section using the custom primary key 'section_id'
+            $section = Section::with('enrollments')
+                ->where('name', trim($entry->section))
+                ->where('year_level', trim($entry->year_level))
+                ->first();
+
+            // Attach the section model and the specific section_id for the URL
+            $entry->section_model = $section;
+            $entry->section_id = $section ? $section->section_id : null;
+
+            return $entry;
+        });
+
+    return view('teacher.schedule.index', compact('schedules'));
+}
 }

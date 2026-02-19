@@ -32,10 +32,11 @@ class AuthenticatedSessionController extends Controller
         // Direct users to their specific portal based on their database role
         return match($user->role) {
             'admin'        => redirect()->route('admin.index'),
-            'admissions'        => redirect()->route('admissions.index'),
+            'admissions'   => redirect()->route('admissions.index'),
             'registrar'    => redirect()->route('registrar.index'),
             'student'      => redirect()->route('student.dashboard'),
-            'teacher'      => redirect()->route('teacher.index'),
+            'teacher'      => redirect()->route('teacher.dashboard'),
+            'cashier'      => redirect()->route('cashier.index'),
             default        => redirect()->route('welcome'),
         };
     }

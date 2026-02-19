@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
+use App\Models\User;    
+use App\Models\Section; 
+
 use Illuminate\Http\Request;
 
 class AdminScheduleController extends Controller
@@ -29,8 +32,13 @@ public function index(Request $request)
 }
 public function create()
 {
-    // Make sure this view file exists at resources/views/admin/schedule/create.blade.php
-    return view('admin.schedule.create');
+    // Fetch only users who have the 'teacher' role
+    $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+    
+    // Fetch your sections
+    $sections = Section::all();
+
+    return view('admin.schedule.create', compact('teachers', 'sections'));
 }
 
 public function edit(Schedule $schedule)
@@ -49,24 +57,37 @@ public function store(Request $request)
         'room' => 'required|string|max:255',
         'year_level' => 'required|string',
         'section' => 'required|string|max:255',
-        
     ]);
+
+
+    do {
+        $validated['id'] = random_int(10000, 99999);
+    } while (Schedule::where('id', $validated['id'])->exists());
 
     $conflict = Schedule::where('day_of_week', $request->day_of_week)
         ->where(function ($query) use ($request) {
             $query->where('teacher', $request->teacher)
-                  ->orWhere('room', $request->room);
+                ->orWhere('room', $request->room);
         })
         ->where(function ($query) use ($request) {
             $query->where('start_time', '<', $request->end_time)
-                  ->where('end_time', '>', $request->start_time);
-        })->first();
+                ->where('end_time', '>', $request->start_time);
+        })
+        ->first();
+
 
 if ($conflict) {
-    return redirect()->route('admin.schedule.index') // Change this
-        ->with('conflict', true)
-        ->with('conflict_id', $conflict->id)
-        ->with('conflict_message', "Conflict: Teacher {$request->teacher} is already assigned to {$conflict->subject} at this time.")
+    // Determine if it's the room or the teacher that caused the conflict
+    $type = ($conflict->room === $request->room) ? "Room {$request->room}" : "Teacher {$request->teacher}";
+    
+    return redirect()->back()
+        ->with('conflict_popup', [
+            'teacher' => $conflict->teacher,
+            'subject' => $conflict->subject,
+            'room'    => $conflict->room,
+            'time'    => \Carbon\Carbon::parse($conflict->start_time)->format('g:i A') . ' - ' . \Carbon\Carbon::parse($conflict->end_time)->format('g:i A'),
+            'message' => "Conflict: {$type} is already occupied by {$conflict->subject}."
+        ])
         ->withInput();
 }
 

@@ -34,10 +34,11 @@
         
             $portalRoute = match ($role) {
                 'admin' => route('admin.index'),
-                'teacher' => route('teacher.index'),
+                'teacher' => route('teacher.dashboard'),
                 'student' => route('student.dashboard'),
                 'parent' => route('parent.index'),
                 'registrar' => route('registrar.index'),
+                'cashier' => route('cashier.index'),
                 default => route('welcome'),
             };
         @endphp

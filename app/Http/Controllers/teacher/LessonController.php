@@ -4,11 +4,24 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
+use App\Models\Section;
+use App\Models\Enrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class LessonController extends Controller
 {
+    /**
+     * Display the student class list for a specific section.
+     */
+    public function show($id)
+    {
+        // Fetch the section with its enrollments and admission relationship
+        $section = Section::with(['enrollments.admission'])->findOrFail($id);
+
+        return view('teacher.lessons.index', compact('section'));
+    }
+
     /**
      * Display a listing of the lessons.
      */
@@ -28,14 +41,13 @@ class LessonController extends Controller
             'subject' => 'required|string',
             'date' => 'required|date',
             'description' => 'nullable|string',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:10240', // 10MB limit
+            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:10240',
         ]);
 
         if ($request->hasFile('file')) {
             $validated['file_path'] = $request->file('file')->store('lessons', 'public');
         }
 
-        // Default status for new lessons is draft
         $validated['status'] = 'draft';
 
         Lesson::create($validated);
@@ -54,7 +66,6 @@ class LessonController extends Controller
 
     /**
      * Update the specified lesson in storage.
-     * This handles both full form updates and the index dropdown status change.
      */
     public function update(Request $request, Lesson $lesson)
     {
@@ -67,9 +78,7 @@ class LessonController extends Controller
             'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:10240',
         ]);
 
-        // Handle File Update
         if ($request->hasFile('file')) {
-            // Delete the old file from storage if a new one is uploaded
             if ($lesson->file_path && Storage::disk('public')->exists($lesson->file_path)) {
                 Storage::disk('public')->delete($lesson->file_path);
             }
@@ -78,8 +87,6 @@ class LessonController extends Controller
 
         $lesson->update($validated);
 
-        // If the request is just a status update from the index dropdown, 
-        // return back instead of a full redirect to maintain scroll position.
         if ($request->has('status') && !$request->has('title')) {
             return back()->with('success', 'Status updated to ' . ucfirst($request->status));
         }
@@ -93,7 +100,6 @@ class LessonController extends Controller
      */
     public function destroy(Lesson $lesson)
     {
-        // Remove associated file from storage before deleting the record
         if ($lesson->file_path && Storage::disk('public')->exists($lesson->file_path)) {
             Storage::disk('public')->delete($lesson->file_path);
         }

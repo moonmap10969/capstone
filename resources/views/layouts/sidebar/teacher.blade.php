@@ -59,7 +59,7 @@
         </a>
 
         <!-- Class List -->
-        <a href="#" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
+        <a href="{{ route('teacher.classlist.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold transition">
             <span>Class List</span>
         </a>
 

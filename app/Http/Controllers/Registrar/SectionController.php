@@ -21,13 +21,12 @@ class SectionController extends Controller
             'name' => 'required|string|max:255',
             'section_id' => 'required|unique:sections,section_id',
             'capacity' => 'required|integer|min:1',
-            'year_level' => 'required|string'
+            'year_level' => 'required' // Simplified to allow any selected level
         ]);
 
         Section::create($validated);
 
-        return redirect()->route('registrar.sections.index')
-            ->with('success', 'Section created successfully!');
+        return redirect()->route('registrar.sections.index')->with('success', 'Section created!');
     }
 
     public function edit(Section $section)
