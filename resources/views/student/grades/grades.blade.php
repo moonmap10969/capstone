@@ -1,7 +1,6 @@
 <title>Grades - FUMCES</title>
 
-<!-- Sidebar -->
-@include('layouts.sidebar')
+
 
 <!-- Main Content -->
 <main class="flex-1 bg-yellow-50 p-8">

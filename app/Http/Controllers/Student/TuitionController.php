@@ -4,84 +4,64 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Tuition;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use App\Models\Admission;
+use App\Models\Tuition;
+use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 
 class TuitionController extends Controller
 {
-public function index()
-{
-    $user = Auth::user();
+    public function index()
+    {
+        $user = Auth::user();
+        $admission = Admission::where('user_id', $user->id)->firstOrFail();
+        $studentNumber = $admission->studentNumber;
 
-    // Check if studentNumber exists; use lengthAwarePaginator via paginate(0) for consistency
-    if (!$user || empty($user->studentNumber)) {
-        return view('student.tuition.index', [
-            'tuitions' => \App\Models\Tuition::where('id', 0)->paginate(10), // Returns empty Paginator
-            'totalPaid' => 0,
-            'pendingCount' => 0
-        ])->with('error', 'Student Profile incomplete. Student ID is missing.');
-    }
+        // Fetch both student-submitted (Tuition) and office-recorded (Payment) records
+        $tuitions = Tuition::where('studentNumber', $studentNumber)
+            ->whereIn('status', ['pending', 'approved', 'rejected'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-    $tuitions = Tuition::where('studentNumber', $user->studentNumber)
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-                
+        $cashierPayments = Payment::where('studentNumber', $studentNumber)
+            ->where('approval_status', 'approved')
+            ->get();
 
-        $totalPaid = Tuition::where('studentNumber', $user->studentNumber)
-                    ->where('status', 'approved')
-                    ->sum('amount');
+        // Calculate Totals
+        $totalAssessment = Tuition::where('studentNumber', $studentNumber)->sum(DB::raw('tuition_fee + misc_fees'));
+        
+        $totalPaid = Tuition::where('studentNumber', $studentNumber)->where('status', 'approved')->sum('amount') +
+                     $cashierPayments->sum('amount');
 
-        $pendingCount = Tuition::where('studentNumber', $user->studentNumber)
-                    ->where('status', 'pending')
-                    ->count();
-
-        return view('student.tuition.index', compact('tuitions', 'totalPaid', 'pendingCount'));
+        return view('student.tuition.index', compact('tuitions', 'cashierPayments', 'totalAssessment', 'totalPaid'));
     }
 
     public function store(Request $request)
-    {
-        // 1. Validate with custom messages so you know exactly what failed
-        $request->validate([
-            'amount'           => 'required|numeric|min:1',
-            'reference_number' => 'nullable|string|max:255',
-            'payment_method'   => 'required|in:gcash,bank_transfer,cash',
-            'payment_proof'    => $request->payment_method === 'cash' 
-                                  ? 'nullable' 
-                                  : 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // Increased to 5MB
-        ]);
+{
+    $request->validate([
+        'payment_method' => 'required|in:GCash,Bank Transfer',
+        'amount_type' => 'required|in:Partial,Full',
+        'amount' => 'required|numeric|min:1',
+        'reference_number' => 'required|string|unique:tuitions,reference_number',
+        'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+    ]);
 
-        // 2. Extra Safety: Check if User actually has a studentNumber before creating
-        if (empty(Auth::user()->studentNumber)) {
-            return redirect()->back()->withErrors(['studentNumber' => 'Your account is not linked to a Student ID. Submission blocked.'])->withInput();
-        }
+    $user = Auth::user();
+    $admission = Admission::where('user_id', $user->id)->firstOrFail();
+    $path = $request->file('payment_proof')->store('receipts', 'public');
 
-        $filePath = null;
-        if ($request->hasFile('payment_proof')) {
-            $file = $request->file('payment_proof');
-            $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            // Store in the 'public' disk
-            $filePath = $file->storeAs('payment_proofs', $fileName, 'public');
-        }
+    Tuition::create([
+        'studentNumber' => $admission->studentNumber,
+        'name' => $user->name, // This fixes the SQL error
+        'payment_method' => $request->payment_method,
+        'amount_type' => $request->amount_type,
+        'amount' => $request->amount,
+        'reference_number' => $request->reference_number,
+        'payment_proof' => $path,
+        'status' => 'pending',
+    ]);
 
-        // 3. Create the record
-        try {
-            Tuition::create([
-                'studentNumber'       => Auth::user()->studentNumber,
-                'name'     => Auth::user()->name, 
-                'amount'           => $request->amount,
-                'reference_number' => $request->reference_number,
-                'payment_method'   => $request->payment_method,
-                'payment_proof'    => $filePath,
-                'status'           => 'pending', 
-                'payment_type'     => 'partial', 
-            ]);
-
-            return redirect()->route('student.tuition.index')->with('success', 'Payment submitted successfully!');
-        } catch (\Exception $e) {
-            // If the database crashes, this will show you why
-            return redirect()->back()->with('error', 'Database Error: ' . $e->getMessage())->withInput();
-        }
-    }
+    return redirect()->back()->with('success', 'Payment submitted to Cashier successfully!');
+}
 }

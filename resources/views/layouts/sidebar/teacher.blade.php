@@ -1,5 +1,5 @@
 
-<aside class="w-64 min-h-screen bg-[#057E2E] flex flex-col shadow-lg">
+<aside class="w-64 h-screen fixed top-0 left-0 bg-[#057E2E] flex flex-col shadow-lg">
 
     <!-- Profile -->
     <div class="p-6 border-b border-white/20 text-center space-y-3">
@@ -83,10 +83,10 @@
     </nav>
 
     <!-- Footer -->
-    <div class="p-4 border-t border-white/20 text-center text-xs text-white/80">
-        <p class="font-medium">First United Methodist Church Ecumenical School</p>
-        <p class="mt-1">School Year 2026–2027</p>
-    </div>
+<div class="p-4 border-t border-white/20 text-center text-xs text-white/80">
+    <p class="font-medium">First United Methodist Church Ecumenical School</p>
+    <p class="mt-1 opacity-70">School Year {{ date('Y') }}–{{ date('Y') + 1 }}</p>
+</div>
 </aside>
 
 <script>

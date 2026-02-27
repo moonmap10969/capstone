@@ -1,4 +1,4 @@
-<aside class="w-64 min-h-screen bg-[#057E2E] flex flex-col shadow-lg">
+<aside class="sticky top-0 h-screen w-64 bg-[#057E2E] flex flex-col shadow-lg">
 
     <div class="p-6 border-b border-white/20 text-center space-y-3">
         <div class="w-16 h-16 mx-auto rounded-full bg-white flex items-center justify-center mb-1 shadow-md">
@@ -38,36 +38,23 @@
             <span>Dashboard</span>
         </a>
   
-        <!-- Students -->
-        <a href="{{ route('cashier.students.index') }}"
-           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-           {{ request()->routeIs('cashier.students.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10' }}">
-            <span>Students</span>
-        </a>
   
-        <!-- Enrollment -->
-        <a href="{{ route('cashier.enrollment') }}"
-           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-           {{ request()->routeIs('cashier.enrollment') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10' }}">
-            <span>Enrollment</span>
-        </a>
-  
-        <!-- Documents -->
-        <a href="{{ route('cashier.documents') }}"
-           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-           {{ request()->routeIs('cashier.documents') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10' }}">
-            <span>Documents</span>
-        </a>
+<!-- Tuitions -->
+<a href="{{ route('cashier.tuitions.index') }}"
+   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
+   {{ request()->routeIs('cashier.tuitions.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10' }}">
+    <span>Tuitions</span>
+</a>  
   
         <!-- Tuition -->
-        <a href="{{ route('cashier.tuitions.index') }}"
+        <a href="{{ route('cashier.payments.index') }}"
            class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-           {{ request()->routeIs('cashier.tuitions.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10' }}">
-            <span>Tuitions</span>
+           {{ request()->routeIs('cashier.payments.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10' }}">
+            <span>Payments</span>
         </a>
   
         <!-- Reports Dropdown -->
-        <div class="relative">
+        {{-- <div class="relative">
             <button onclick="toggleMenu('reportsMenu', this)"
                 class="w-full flex justify-between items-center gap-2 px-4 py-2 rounded-lg font-medium transition
                 {{ request()->routeIs('cashier.reports.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10' }}">
@@ -89,17 +76,17 @@
                 <a href="{{ route('cashier.reports.payment-reports') }}"
                    class="block px-3 py-1 rounded-md text-white text-sm hover:bg-white/20 transition">
                     Payment Reports
-                </a>
+                </a> --}}
   
             </div>
         </div>
   
     </nav>
   
-    <div class="p-4 border-t border-white/20 text-center text-xs text-white/80">
-        <p class="font-medium">First United Methodist Church Ecumenical School</p>
-        <p class="mt-1 opacity-70">School Year 2026–2027</p>
-    </div>
+<div class="p-4 border-t border-white/20 text-center text-xs text-white/80">
+    <p class="font-medium">First United Methodist Church Ecumenical School</p>
+    <p class="mt-1 opacity-70">School Year {{ date('Y') }}–{{ date('Y') + 1 }}</p>
+</div>
   
   </aside>
   

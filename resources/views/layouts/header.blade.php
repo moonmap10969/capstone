@@ -37,6 +37,7 @@
                 'teacher' => route('teacher.dashboard'),
                 'student' => route('student.dashboard'),
                 'parent' => route('parent.index'),
+                'admissions' => route('admissions.index'),
                 'registrar' => route('registrar.index'),
                 'cashier' => route('cashier.index'),
                 default => route('welcome'),

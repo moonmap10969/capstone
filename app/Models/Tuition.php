@@ -9,32 +9,35 @@ class Tuition extends Model
 {
     use HasFactory;
 
-    // Table name (optional if following Laravel conventions)
+    protected $primaryKey = 'studentNumber';
     protected $table = 'tuitions';
 
-    // Mass assignable fields
-    protected $fillable = [
-        'studentNumber',
-        'name',
-        'amount',
-        'status',
-        'reference_number',
-        'payment_method',
-        'payment_proof',
-        'approval_status',
-    ];
+   protected $fillable = [
+    'studentNumber',
+    'name',
+    'year_level',
+    'tuition_fee',
+    'misc_fees',
+    'amount',
+    'balance',
+    'reference_number',
+    'status',
+    'payment_schedule',
+    'umc_affiliation',
+    'sibling_order',
+    'grade_level',
+    'payment_method',
+    'approval_status',
+    'payment_type',
+    'payment_proof'
+];
 
-    // Default values
-    protected $attributes = [
-        'status' => 'unpaid',           // default payment status
-        'payment_method' => 'gcash',    // default payment method
-        'approval_status' => 'pending', // default approval status
-    ];
-
-    /**
-     * Optional: Lists of allowed enum values for validation or form options
-     */
-    public static $statusOptions = ['unpaid', 'paid'];
-    public static $paymentMethodOptions = ['gcash', 'bank_transfer', 'cash'];
-    public static $approvalStatusOptions = ['pending', 'approved', 'rejected'];
+    public function admission()
+    {
+        return $this->belongsTo(Admission::class, 'studentNumber', 'studentNumber');
+    }
+public function payments()
+{
+    return $this->hasMany(Payment::class, 'studentNumber', 'studentNumber');
+}
 }

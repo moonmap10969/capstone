@@ -8,7 +8,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="min-h-screen flex bg-gray-100" x-data="{ open: false, viewModal: false, selectedEnrollment: null, searchQuery: '', statusFilter: 'all' }">
+<body class="min-h-screen flex bg-gray-100" x-data="{ open: false, viewModal: false, selectedEnrollment: null, searchQuery: '', statusFilter: 'all', typeFilter: 'all' }">
 
     @include('layouts.sidebar.registrar')
 
@@ -20,21 +20,10 @@
                 <h1 class="text-2xl font-bold text-gray-800">Enrollment Management</h1>
 
                 <div x-data="{ openMenu: false }" class="relative">
-                    <button @click="openMenu = !openMenu"
-                        class="bg-[#057E2E] text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-[#046625] transition">
-                        + New Enrollment
-                    </button>
-
-                    <div x-show="openMenu" @click.away="openMenu = false" x-transition
-                        class="absolute right-0 mt-3 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-                        <a href="{{ route('registrar.enrollment.create', ['type' => 'new']) }}"
-                           class="block px-4 py-3 text-sm font-semibold hover:bg-gray-50 border-b">
-                            New Student
-                        </a>
-                        <button @click="window.location.href='{{ route('registrar.enrollment.create', ['type' => 'returning']) }}'"
-                            class="w-full text-left px-4 py-3 text-sm font-semibold hover:bg-gray-50">
-                            Returning Student
-                        </button>
+                    <a href="{{ route('registrar.enrollment.create', ['type' => 'new']) }}"
+                    class="bg-[#057E2E] text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-[#046625] transition inline-block">
+                    + New Enrollment
+                    </a>
                     </div>
                 </div>
             </div>
@@ -64,11 +53,18 @@
                     <input type="text" placeholder="Search by name or ID..." x-model="searchQuery" 
                         class="pl-9 w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#057E2E] outline-none">
                 </div>
-                <select x-model="statusFilter" class="border border-gray-300 rounded-lg p-2 w-full sm:w-48 focus:ring-2 focus:ring-[#057E2E]">
-                    <option value="all">All Status</option>
-                    <option value="enrolled">Enrolled</option>
-                    <option value="pending">Pending</option>
-                </select>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <select x-model="typeFilter" class="border border-gray-300 rounded-lg p-2 w-full sm:w-40 focus:ring-2 focus:ring-[#057E2E]">
+                        <option value="all">All Types</option>
+                        <option value="new">New</option>
+                        <option value="returning">Returning</option>
+                    </select>
+                    <select x-model="statusFilter" class="border border-gray-300 rounded-lg p-2 w-full sm:w-40 focus:ring-2 focus:ring-[#057E2E]">
+                        <option value="all">All Status</option>
+                        <option value="enrolled">Enrolled</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
             </div>
 
             {{-- Table --}}
@@ -77,6 +73,7 @@
                     <thead class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase">
                         <tr>
                             <th class="p-4">Student Name</th>
+                            <th class="p-4">Type</th>
                             <th class="p-4">Section</th>
                             <th class="p-4">Grade</th>
                             <th class="p-4">Status</th>
@@ -87,12 +84,18 @@
                         @forelse($enrollments as $e)
                         <tr class="hover:bg-gray-50 transition" 
                             x-show="(statusFilter === 'all' || statusFilter === '{{ $e->status }}') && 
-                            ('{{ $e->admission->studentFirstName ?? '' }} {{ $e->admission->studentLastName ?? '' }}'.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                             '{{ $e->studentNumber ?? '' }}'.toLowerCase().includes(searchQuery.toLowerCase()))">
+                                    (typeFilter === 'all' || typeFilter === '{{ $e->student_type }}') &&
+                                    ('{{ $e->admission->studentFirstName ?? '' }} {{ $e->admission->studentLastName ?? '' }}'.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                     '{{ $e->studentNumber ?? '' }}'.toLowerCase().includes(searchQuery.toLowerCase()))">
                             
                             <td class="p-4">
                                 <p class="font-medium text-gray-900">{{ $e->admission->studentFirstName ?? 'N/A' }} {{ $e->admission->studentLastName ?? '' }}</p>
                                 <p class="text-xs text-gray-400 mt-1">{{ $e->studentNumber }}</p>
+                            </td>
+                            <td class="p-4">
+                                <span class="text-xs font-bold uppercase {{ $e->student_type === 'new' ? 'text-blue-600' : 'text-purple-600' }}">
+                                    {{ $e->student_type ?? 'N/A' }}
+                                </span>
                             </td>
                             <td class="p-4 text-sm text-gray-600 font-bold">{{ $e->section->name ?? 'Unassigned' }}</td>
                             <td class="p-4 text-gray-600 uppercase">{{ $e->year_level }}</td>
@@ -112,7 +115,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="5" class="p-12 text-center text-gray-400 italic">No enrollment records found.</td></tr>
+                        <tr><td colspan="6" class="p-12 text-center text-gray-400 italic">No enrollment records found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -137,8 +140,16 @@
                         <p class="font-bold text-gray-800" x-text="selectedEnrollment?.admission?.studentFirstName + ' ' + selectedEnrollment?.admission?.studentLastName"></p>
                     </div>
                     <div>
+                        <p class="text-xs text-gray-400 uppercase font-bold">Student Type</p>
+                        <p class="font-bold uppercase" :class="selectedEnrollment?.student_type === 'new' ? 'text-blue-600' : 'text-purple-600'" x-text="selectedEnrollment?.student_type || 'N/A'"></p>
+                    </div>
+                    <div>
                         <p class="text-xs text-gray-400 uppercase font-bold">Section</p>
                         <p class="font-bold text-green-700" x-text="selectedEnrollment?.section?.name || 'N/A'"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase font-bold">Status</p>
+                        <p class="font-bold text-gray-800 uppercase" x-text="selectedEnrollment?.status"></p>
                     </div>
                 </div>
             </div>

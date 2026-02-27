@@ -2,49 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        @media screen and (max-width: 600px) {
-            .container { padding: 20px !important; }
-            .content { padding: 20px !important; }
-        }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; line-height: 1.6; }
+        .email-wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { border-bottom: 2px solid #15803d; padding-bottom: 10px; margin-bottom: 30px; }
+        .title { color: #15803d; font-size: 22px; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .section-title { font-size: 14px; font-weight: bold; color: #15803d; text-transform: uppercase; margin-top: 25px; margin-bottom: 10px; }
+        .content { font-size: 16px; margin-bottom: 20px; }
+        .data-box { background-color: #f9f9f9; padding: 15px; border: 1px solid #eeeeee; margin: 20px 0; }
+        .footer { margin-top: 40px; border-top: 1px solid #dddddd; padding-top: 20px; font-size: 13px; color: #777777; }
+        .signature-name { font-weight: bold; color: #333333; margin: 0; }
     </style>
 </head>
-<body style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #2d3748; margin: 0; padding: 0; background-color: #f7fafc;">
-    <table width="100%" cellpadding="0" cellspacing="0" class="container" style="padding: 30px 0;">
-        <tr>
-            <td align="center">
-                <table cellpadding="0" cellspacing="0" style="width: 100%; max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                    <tr>
-                        <td style="background-color: #2f855a; padding: 20px; text-align: center;">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="content" style="padding: 40px;">
-                            <h2 style="margin-top: 0; color: #2f855a; font-size: 24px;">Application Received!</h2>
-                            <p>Dear Mr./Mrs. <strong>{{ $admission->parentLastName }}</strong>,</p>
-                            <p>We received the application for <strong>{{ $admission->studentFirstName }} {{ $admission->studentLastName }}</strong>.</p>
-                            <div style="background-color: #f0fff4; border-left: 4px solid #48bb78; padding: 20px; margin: 25px 0;">
-                                <p style="margin: 0; font-weight: bold; color: #276749;">Next Steps:</p>
-                                <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #2f855a;">
-                                    <li>Submit physical documents on-site</li>
-                                    <li>Participate in an interview</li>
-                                    <li>Settle school fees at Accounting</li>
-                                </ul>
-                            </div>
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 40px; border-top: 1px solid #edf2f7;">
-                                <tr>
-                                    <td style="padding-top: 25px;">
-                                        <p style="margin: 0; font-weight: bold;">FUMCES Admissions Team</p>
-                                        <p style="margin: 5px 0 0 0; font-size: 13px; color: #718096;">Phone: (0912) 345 6789</p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<body>
+    <div class="email-wrapper">
+        <div class="header">
+            <h1 class="title">FUMCESS ADMISSIONS</h1>
+        </div>
+
+        <div class="content">
+            <p>Dear <strong>Mr./Mrs. {{ $admission->parentLastName }}</strong>,</p>
+
+            <p>This email confirms that we have successfully received the formal application for <strong>{{ $admission->studentFirstName }} {{ $admission->studentLastName }}</strong>. Our team is currently reviewing the submitted information for the upcoming academic period.</p>
+
+            <div class="data-box">
+                <strong>APPLICATION SUMMARY:</strong><br>
+                Applicant Name: {{ $admission->studentFirstName }} {{ $admission->studentLastName }}<br>
+                Submission Date: {{ date('F d, Y') }}
+            </div>
+
+            <h2 class="section-title">Required Next Steps</h2>
+            <p>To finalize the enrollment process, please ensure the following actions are completed:</p>
+            <ol>
+                <li><strong>Document Submission:</strong> Present all original physical copies of the uploaded documents to the Registrar's Office for verification.</li>
+                <li><strong>Interview Schedule:</strong> You will receive a separate notification regarding the scheduled interview with our Department Head.</li>
+                <li><strong>Financial Clearance:</strong> Proceed to the Accounting Office for the settlement of necessary school fees once documents are verified.</li>
+            </ol>
+
+            <p>If you have any immediate questions regarding this application, please contact our office directly at <strong>(0912) 345 6789</strong> or reply to this email.</p>
+        </div>
+
+        <div class="footer">
+            <p class="signature-name">Office of the Admissions</p>
+            <p style="margin: 0;">FUMCESS Institutional Management</p>
+            <p style="margin: 0;">Main Campus | Admissions Department</p>
+            <p style="margin-top: 15px; font-style: italic;">This is an official communication. Please retain a copy for your records.</p>
+        </div>
+    </div>
 </body>
 </html>

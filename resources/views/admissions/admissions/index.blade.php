@@ -178,7 +178,7 @@ gradeFilter.addEventListener('change', performFilter);
 
             document.getElementById('guardianDetails').innerHTML = `
                 <div class="col-span-2"><p class="text-[10px] text-gray-400 font-bold uppercase">Primary Guardian</p><p class="font-bold text-gray-800">${data.parentFirstName} ${data.parentLastName}</p></div>
-                <div><p class="text-[10px] text-gray-400 font-bold uppercase">Phone</p><p class="font-bold text-gray-800">${data.parentContact}</p></div>
+                <div><p class="text-[10px] text-gray-400 font-bold uppercase">Phone</p><p class="font-bold text-gray-800">${data.phone}</p></div>
                 <div><p class="text-[10px] text-gray-400 font-bold uppercase">Email</p><p class="font-bold text-gray-800 text-xs">${data.email}</p></div>
             `;
 

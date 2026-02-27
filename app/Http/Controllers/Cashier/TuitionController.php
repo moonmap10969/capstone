@@ -4,121 +4,126 @@ namespace App\Http\Controllers\Cashier;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tuition;
-use App\Models\User; // or Student model if you have one
+use App\Models\FeeStructure;
+use App\Models\Admission;
 use Illuminate\Http\Request;
 
 class TuitionController extends Controller
 {
-public function index()
+public function index(Request $request)
 {
-    $tuitions = Tuition::orderBy('id', 'asc')->paginate(10);
+    $search = $request->get('search');
+    $gradeFilter = $request->get('grade_filter');
 
-    // Stats
-    $totalPending = Tuition::where('status', 'pending')->count();
+    // Eager load tuition + payments
+    $admissions = Admission::with(['tuition.payments' => function($q) {
+        $q->orderBy('created_at', 'desc');
+    }])
+    ->when($search, function($q) use ($search) {
+        $q->where('studentFirstName', 'like', "%{$search}%")
+          ->orWhere('studentLastName', 'like', "%{$search}%")
+          ->orWhere('studentNumber', 'like', "%{$search}%");
+    })
+    ->when($gradeFilter, fn($q) => $q->where('year_level', $gradeFilter))
+    ->orderBy('studentLastName')
+    ->paginate(20)
+    ->appends($request->all());
 
-    $paymentsPartial = Tuition::where('payment_type', 'partial')
-                              ->where('status', 'approved')
-                              ->count();
-
-    $paymentsCompleted = Tuition::whereIn('payment_type', ['paid', 'full'])
-                                ->where('status', 'approved')
-                                ->count();
-
-    $totalStudents = Tuition::distinct('studentNumber')->count('studentNumber');
-
-    // Fully Paid Students grouped by student
-    $fullyPaid = Tuition::select('studentNumber', 'name')
-                        ->where('status', 'approved')
-                        ->whereIn('payment_type', ['paid', 'full'])
-                        ->groupBy('studentNumber', 'name')
-                        ->get()
-                        ->map(function($t) {
-                            $t->amount = Tuition::where('studentNumber', $t->studentNumber)
-                                                ->where('status', 'approved')
-                                                ->sum('amount');
-                            $t->payment_type = 'Paid';
-                            return $t;
-                        });
-
-    // Students With Balance grouped by student
-    $withBalance = Tuition::select('studentNumber', 'name')
-                          ->where('status', 'approved')
-                          ->where('payment_type', 'partial')
-                          ->groupBy('studentNumber', 'name')
-                          ->get()
-                          ->map(function($t) {
-                              $t->amount = Tuition::where('studentNumber', $t->studentNumber)
-                                                  ->where('status', 'approved')
-                                                  ->sum('amount');
-                              $t->balance = 15738 - $t->amount; // adjust full tuition as needed
-                              $t->payment_type = 'Partial';
-                              return $t;
-                          });
-
-    return view('cashier.tuitions.index', compact(
-        'tuitions',
-        'totalPending',
-        'paymentsPartial',
-        'paymentsCompleted',
-        'totalStudents',
-        'fullyPaid',
-        'withBalance'
-    ));
-}
-        
-    public function approve(Tuition $tuition)
-    {
-        // Approve the tuition
-        $tuition->status = 'approved';
-    
-        // Automatically mark full payment if amount matches the total tuition
-        // Adjust 15738 to your actual full tuition amount if needed
-        if ($tuition->amount >= 15738) {
-            $tuition->payment_type = 'paid';
+    // Transform payments to include viewable URL
+    $admissions->getCollection()->transform(function($student) {
+        if ($student->tuition && $student->tuition->payments) {
+            $student->tuition->payments = $student->tuition->payments->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'amount' => $p->amount,
+                    'payment_method' => $p->payment_method,
+                    'created_at' => $p->created_at,
+                   'receipt_path' => $p->receipt_path ? route('cashier.payments.show', $p->id) : null
+                ];
+            });
         }
-    
-        $tuition->save();
-    
-        return redirect()->back()->with('success', 'Tuition payment approved!');
-    }
-    
-    public function update(Request $request, $id)
-{
-    $tuition = Tuition::findOrFail($id);
+        return $student;
+    });
 
-    $request->validate([
-        'student_id' => 'required|string',
-        'student_name' => 'required|string',
-        'amount' => 'required|numeric',
-        'payment_method' => 'required|string',
-        'payment_type' => 'required|string',
-        'status' => 'required|string',
-        'reference_number' => 'nullable|string',
-        'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf'
+    return view('cashier.tuitions.index', compact('admissions'));
+}
+
+    public function store(Request $request)
+{
+    $preset = FeeStructure::where('year_level', $request->year_level)->first();
+    if (!$preset) return back()->with('error', "Rates for {$request->year_level} not found.");
+
+    // 1. Calculate the highest discount rate
+    $affiliationDiscount = ($request->umc_affiliation === 'worker') ? 1.0 : (($request->umc_affiliation === 'member') ? 0.5 : 0);
+    $siblingDiscount = ['none' => 0, '2nd' => 0.10, '3rd' => 0.20, '4th' => 0.30][$request->sibling_order] ?? 0;
+    $grade7Incentive = ($request->year_level === 'grade7') ? 0.30 : 0;
+    $finalDiscountRate = max($affiliationDiscount, $siblingDiscount, $grade7Incentive);
+
+    // 2. Explicitly cast to float to ensure addition works
+    $baseTuition = (float) $preset->base_tuition;
+    $miscFees = (float) $preset->total_misc;
+
+    // 3. Perform the calculation
+    $netTuition = $baseTuition * (1 - $finalDiscountRate);
+    $totalAmount = $netTuition + $miscFees;
+
+    Tuition::create([
+        'studentNumber' => $request->studentNumber,
+        'name'          => $request->name,
+        'year_level'    => $request->year_level,
+        'tuition_fee'   => $netTuition,
+        'misc_fees'     => $miscFees,
+        'amount'        => $totalAmount,
+        'balance'       => $totalAmount,
+        'status'        => 'pending'
     ]);
 
-    $tuition->studentNumber = $request->student_id;
-    $tuition->name = $request->student_name;
-    $tuition->amount = $request->amount;
-    $tuition->payment_method = $request->payment_method;
-    $tuition->payment_type = $request->payment_type;
-    $tuition->status = $request->status;
-    $tuition->reference_number = $request->reference_number;
+    return back()->with('success', 'Assessment finalized including miscellaneous fees.');
+}
+    public function setPayment(Request $request, $id)
+    {
+        // Updates existing assessment with payment details
+        $tuition = Tuition::findOrFail($id);
+        $data = $this->calculateTuition($request);
+        
+        // If payment is made, update status to approved
+        if ($request->initial_payment > 0) {
+            $data['status'] = 'approved';
+            $data['approval_status'] = 'approved';
+        }
 
-    // Handle file upload
-    if ($request->hasFile('payment_proof')) {
-        $path = $request->file('payment_proof')->store('payment_proofs', 'public');
-        $tuition->payment_proof = $path;
+        $tuition->update($data);
+
+        return back()->with('success', 'Payment processed and balance updated.');
     }
 
-    $tuition->save();
-
-    return redirect()
-        ->route('cashier.tuitions.index')
-        ->with('success', 'Tuition record updated successfully.');
-}
-
-
-
+    private function calculateTuition(Request $request)
+{
+    // Fetch the existing assessment made by the Registrar
+    $existingTuition = Tuition::where('studentNumber', $request->studentNumber)->first();
     
+    // Use Registrar's values if they exist, otherwise fallback to defaults
+    $baseTuition = $existingTuition ? (float)$existingTuition->tuition_fee : 7188;
+    $miscFees = $existingTuition ? (float)$existingTuition->misc_fees : 8550;
+
+    // Apply Schedule-based incentives (Full 10%, Quarterly 5%)
+    $scheduleDiscount = ($request->payment_schedule === 'full') ? 0.10 : (($request->payment_schedule === 'quarterly') ? 0.05 : 0);
+    $tuitionAfterSchedule = $baseTuition * (1 - $scheduleDiscount);
+    
+    $grandTotal = $tuitionAfterSchedule + $miscFees;
+    $initialPayment = (float)($request->initial_payment ?? 0);
+
+    return [
+        'studentNumber'    => $request->studentNumber,
+        'name'             => $request->name,
+        'tuition_fee'      => $tuitionAfterSchedule,
+        'misc_fees'        => $miscFees,
+        'amount'           => $grandTotal,
+        'balance'          => max($grandTotal - $initialPayment, 0),
+        'payment_method'   => $request->payment_method ?? 'cash',
+        'status'           => $initialPayment >= $grandTotal ? 'approved' : 'pending',
+        'approval_status'  => $initialPayment > 0 ? 'approved' : 'pending',
+        'payment_schedule' => $request->payment_schedule,
+    ];
+}
 }

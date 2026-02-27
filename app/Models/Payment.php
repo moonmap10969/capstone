@@ -11,23 +11,24 @@ class Payment extends Model
 
     protected $fillable = [
         'studentNumber',
-        'name',
-        'tuition_fee',
-        'misc_fees',
         'amount',
         'payment_method',
         'status',
         'approval_status',
         'reference_number',
-        'payment_proof',
-        'payment_type',
-        'id',
-        
+        'payment_proof'
     ];
 
-    // Optional defaults
     protected $attributes = [
-        'status' => 'pending',
-        'approval_status' => 'pending',
+        'status' => 'completed',
+        'approval_status' => 'approved',
     ];
+
+    /**
+     * Relationship: Payment belongs to Tuition
+     */
+    public function tuition()
+    {
+        return $this->belongsTo(Tuition::class, 'studentNumber', 'studentNumber');
+    }
 }

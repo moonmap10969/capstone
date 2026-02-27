@@ -39,12 +39,6 @@
           <span>Enrollment</span>
       </a>
 
-        <a href="{{ route('registrar.sections.index') }}" 
-        class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-        {{ request()->routeIs('registrar.sections.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10 hover:text-white' }}">
-            <span>Sections</span>
-        </a>
-
          <a href="{{ route('registrar.classlist.index') }}" 
         class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
         {{ request()->routeIs('registrar.classlist.*') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white/10 hover:text-white' }}">
@@ -81,10 +75,10 @@
       </div>
   </nav>
 
-  <div class="p-4 border-t border-white/20 text-center text-xs text-white/80">
-      <p class="font-medium">First United Methodist Church Ecumenical School</p>
-      <p class="mt-1 opacity-70">School Year 2026–2027</p>
-  </div>
+<div class="p-4 border-t border-white/20 text-center text-xs text-white/80">
+    <p class="font-medium">First United Methodist Church Ecumenical School</p>
+    <p class="mt-1 opacity-70">School Year {{ date('Y') }}–{{ date('Y') + 1 }}</p>
+</div>
 
 </aside>
 

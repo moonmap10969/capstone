@@ -1,4 +1,4 @@
-<aside class="w-64 min-h-screen bg-[#057E2E] flex flex-col shadow-lg">
+<aside class="w-64 h-screen bg-[#057E2E] flex flex-col shadow-lg sticky top-0">
 
     {{-- Profile Section --}}
     <div class="p-6 border-b border-white/20">
@@ -51,11 +51,11 @@
             Schedule
         </a>
 
-        {{-- <a href="{{ route('admin.reports.index') }}"
+        <a href="{{ route('admin.sections.index') }}"
            class="flex items-center gap-3 px-4 py-3 rounded-lg
-           {{ request()->routeIs('admin.reports.*') ? 'bg-white text-[#057E2E] font-bold shadow' : 'text-white hover:bg-white hover:text-[#057E2E]' }}">
-            Reports
-        </a> --}}
+           {{ request()->routeIs('sections.schedule.*') ? 'bg-white text-[#057E2E] font-bold shadow' : 'text-white hover:bg-white hover:text-[#057E2E]' }}">
+            Section
+        </a>
     </nav>
 
 {{-- Footer --}}

@@ -24,11 +24,15 @@ class Admission extends Model
 public function user() {
     return $this->belongsTo(User::class);
 }
-
+public function tuition()
+{
+    return $this->hasOne(Tuition::class, 'studentNumber', 'studentNumber');
+}
 public function enrollment(): HasOne
     {
        
         return $this->hasOne(Enrollment::class, 'admission_id');
     }
+
 
 }

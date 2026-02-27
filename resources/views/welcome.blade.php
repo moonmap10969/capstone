@@ -48,7 +48,7 @@
 
         <!-- CTA Buttons -->
         <div class="flex flex-col sm:flex-row gap-4 mb-12">
-          <a href="/admissions"
+          <a href="/admissions-info"
             class="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-yellow-400 text-gray-900 font-semibold hover:bg-yellow-300 transition">
             Enroll Now
           </a>
@@ -302,7 +302,7 @@ Church Ecumenical School
 
       <!-- CTA Buttons -->
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="/admissions"
+        <a href="/admissions-info"
           class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-yellow-400 text-gray-900 font-semibold hover:bg-yellow-300 transition w-full sm:w-auto">
           <!-- Arrow Right Icon -->
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

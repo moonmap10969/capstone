@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Registrar;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Section;
@@ -12,7 +12,7 @@ class SectionController extends Controller
     {
         // Added withCount to fetch the number of students in each section
         $sections = Section::withCount('enrollments')->get();
-        return view('registrar.sections.index', compact('sections'));
+        return view('admin.sections.index', compact('sections'));
     }
 
     public function store(Request $request)
@@ -26,12 +26,12 @@ class SectionController extends Controller
 
         Section::create($validated);
 
-        return redirect()->route('registrar.sections.index')->with('success', 'Section created!');
+        return redirect()->route('admin.sections.index')->with('success', 'Section created!');
     }
 
     public function edit(Section $section)
     {
-        return view('registrar.sections.edit', compact('section'));
+        return view('admin.sections.edit', compact('section'));
     }
 
     public function update(Request $request, Section $section)
@@ -44,12 +44,12 @@ class SectionController extends Controller
         ]);
 
         $section->update($validated);
-        return redirect()->route('registrar.sections.index')->with('success', 'Section updated successfully!');
+        return redirect()->route('admin.sections.index')->with('success', 'Section updated successfully!');
     }
 
     public function destroy(Section $section)
     {
         $section->delete();
-        return redirect()->route('registrar.sections.index')->with('success', 'Section deleted successfully!');
+        return redirect()->route('admin.sections.index')->with('success', 'Section deleted successfully!');
     }
 }
