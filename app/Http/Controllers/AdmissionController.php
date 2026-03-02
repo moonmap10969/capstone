@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Admission;
+use App\Models\User;
 use App\Models\Document;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -18,18 +19,28 @@ class AdmissionController extends Controller
             return view('admissions');
         }
         
-        $user = Auth::user();
-        $admission = $user->admissions()->latest()->first();
+            $user = Auth::user();
+        $currentYear = \App\Models\AcademicYear::where('is_current', true)->first();
 
-        if ($admission) {
-            return view('success-card');
-        }
+        $admission = $user->admissions()
+            ->where('academic_year_id', $currentYear->id ?? null)
+            ->latest()
+            ->first();
+
+    if ($admission) {
+        return view('success-card');
+    }
 
         return view('admissions');
     }
 
     public function store(Request $request)
     {
+        $currentYear = \App\Models\AcademicYear::where('is_current', true)->first();
+    
+    if (!$currentYear) {
+        return redirect()->back()->with('error', 'Enrollment is currently closed (No active academic year).');
+    }
         $validatedData = $request->validate([
             'studentFirstName' => 'required|string|max:255',
             'studentLastName'  => 'required|string|max:255',
@@ -62,6 +73,7 @@ class AdmissionController extends Controller
         // Fix: Explicitly included validated parent data into the creation array
         $admission = Admission::create(array_merge($validatedData, [
             'user_id' => Auth::id(),
+            'academic_year_id' => $currentYear->id,
             'status'  => 'pending',
             'studentNumber' => 'PENDING-' . time(),
             'parentFirstName' => $validatedData['parentFirstName'],

@@ -21,11 +21,12 @@
             <a href="{{ route('cashier.payments.index') }}" class="hover:text-green-700 transition">Payments</a> / Edit Record
         </nav>
         <h1 class="text-3xl font-extrabold text-gray-900">Edit Payment Details</h1>
-        <p class="text-gray-600">Update the transaction information and verification status.</p>
+        <p class="text-gray-600">Update transaction details for <strong>{{ $payment->studentNumber }}</strong>.</p>
     </div>
 
     <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <form action="{{ route('cashier.payments.update', $tuition->id) }}"
+        {{-- Updated to use $payment and cashier.payments.update --}}
+        <form action="{{ route('cashier.payments.update', $payment->id) }}"
               method="POST"
               enctype="multipart/form-data"
               class="p-8 space-y-6">
@@ -36,8 +37,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-gray-700 ml-1">Student ID Number</label>
-                    <input type="text" name="studentNumber"
-                           value="{{ $tuition->studentNumber }}"
+                    <input type="text" 
+                           value="{{ $payment->studentNumber }}"
                            class="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 text-gray-500 cursor-not-allowed outline-none"
                            readonly>
                 </div>
@@ -46,17 +47,17 @@
                     <label class="text-sm font-semibold text-gray-700 ml-1">Payment Method</label>
                     <select name="payment_method"
                             class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-green-700/10 focus:border-green-700 transition-all outline-none appearance-none">
-                        <option value="Cash" {{ $tuition->payment_method == 'Cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="GCash" {{ $tuition->payment_method == 'GCash' ? 'selected' : '' }}>GCash</option>
-                        <option value="Bank Transfer" {{ $tuition->payment_method == 'Bank Transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                        <option value="Walk-in" {{ $tuition->payment_method == 'Walk-in' ? 'selected' : '' }}>Walk-in</option>
+                        <option value="Cash" {{ $payment->payment_method == 'Cash' ? 'selected' : '' }}>Cash</option>
+                        <option value="GCash" {{ $payment->payment_method == 'GCash' ? 'selected' : '' }}>GCash</option>
+                        <option value="Bank Transfer" {{ $payment->payment_method == 'Bank Transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                        <option value="Walk-in" {{ $payment->payment_method == 'Walk-in' ? 'selected' : '' }}>Walk-in</option>
                     </select>
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
                     <label class="text-sm font-semibold text-gray-700 ml-1">Student Name</label>
-                    <input type="text" name="name"
-                           value="{{ $tuition->studentLastName }}, {{ $tuition->studentFirstName }}"
+                    <input type="text" 
+                           value="{{ $payment->studentLastName }}, {{ $payment->studentFirstName }}"
                            class="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 text-gray-500 cursor-not-allowed outline-none"
                            readonly>
                 </div>
@@ -65,9 +66,9 @@
                     <label class="text-sm font-semibold text-gray-700 ml-1">Payment Status</label>
                     <select name="status"
                         class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-green-700/10 focus:border-green-700 transition-all outline-none appearance-none">
-                        <option value="pending" {{ $tuition->status == 'pending' ? 'selected' : '' }}>Pending (Awaiting Verification)</option>
-                        <option value="partial" {{ $tuition->status == 'partial' ? 'selected' : '' }}>Partial (Balance Remaining)</option>
-                        <option value="paid" {{ $tuition->status == 'paid' ? 'selected' : '' }}>Paid (Fully Cleared)</option>
+                        <option value="pending" {{ $payment->status == 'pending' ? 'selected' : '' }}>Pending (Awaiting Verification)</option>
+                        <option value="completed" {{ $payment->status == 'completed' ? 'selected' : '' }}>Completed (Success)</option>
+                        <option value="rejected" {{ $payment->status == 'rejected' ? 'selected' : '' }}>Rejected</option>
                     </select>
                 </div>
             </div>
@@ -77,14 +78,15 @@
             <div class="space-y-4">
                 <label class="text-sm font-semibold text-gray-700 ml-1">Reference/Proof of Payment</label>
                 
-                @if($tuition->payment_proof)
+                {{-- Updated to check receipt_path from the Payment model --}}
+                @if($payment->receipt_path)
                 <div class="flex items-center p-4 bg-blue-50 border border-blue-100 rounded-xl mb-4">
                     <div class="flex-shrink-0 bg-blue-500 text-white p-2 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     <div class="ml-3">
                         <p class="text-xs text-blue-700 font-medium">Existing Proof Attached</p>
-                        <a href="{{ route('cashier.payments.show', $tuition->id) }}" target="_blank" class="text-sm text-blue-900 underline hover:text-blue-700 font-bold">Securely View Decrypted Receipt</a>
+                        <a href="{{ route('cashier.payments.show', $payment->id) }}" target="_blank" class="text-sm text-blue-900 underline hover:text-blue-700 font-bold">Securely View Decrypted Receipt</a>
                     </div>
                 </div>
                 @else

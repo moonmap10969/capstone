@@ -29,15 +29,30 @@
     </aside>
 
     <section class="flex-1 overflow-y-auto p-6">
+    <div class="mb-6 flex items-center justify-between bg-white p-4 rounded-sm border border-gray-200">
+        <h1 class="text-lg font-black text-gray-800 uppercase tracking-tight">Sectional Class Lists</h1>
+        <div class="flex items-center gap-3">
+            <label class="text-[10px] font-black text-gray-400 uppercase">School Year:</label>
+            <select onchange="window.location.href='?academic_year='+this.value" 
+                    class="border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-bold text-gray-600 outline-none focus:border-green-600">
+                @foreach($academicYears as $ay)
+                    <option value="{{ $ay->id }}" {{ request('academic_year', $activeYear->id) == $ay->id ? 'selected' : '' }}>
+                        {{ $ay->year_range }} ({{ $ay->semester }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+
     @foreach($sections as $yearLevel => $levelSections)
         <div x-show="activeGrade === '{{ $yearLevel }}'" x-cloak class="space-y-6">
             @foreach($levelSections as $section)
                 <div class="bg-white border border-gray-200 shadow-sm rounded-sm">
-                    <div class="bg-[#F9FAFB] px-6 py-4 border-b">
+                    <div class="bg-[#F9FAFB] px-6 py-4 border-b flex justify-between items-center">
                         <h2 class="text-sm font-bold text-gray-700 uppercase">{{ $section->name }}</h2>
-                    </div>
-                    <div class="flex border-b text-[11px] font-bold text-gray-500 uppercase tracking-tight bg-[#F9FAFB]">
-                        <div class="px-6 py-3 border-b-2 border-green-600 text-green-700 bg-white">Class List</div>
+                        <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">
+                            {{ $section->enrollments->where('admission.academic_year_id', request('academic_year', $activeYear->id))->count() }} Students
+                        </span>
                     </div>
 
                     <table class="w-full text-left text-[12px]">
@@ -49,8 +64,13 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y">
-                            {{-- Sort by Last Name directly in the view --}}
-                            @forelse($section->enrollments->sortBy('admission.studentLastName') as $index => $enrollment)
+                            @php
+                                $filteredEnrollments = $section->enrollments
+                                    ->where('admission.academic_year_id', request('academic_year', $activeYear->id))
+                                    ->sortBy('admission.studentLastName');
+                            @endphp
+
+                            @forelse($filteredEnrollments as $enrollment)
                                 <tr class="hover:bg-green-50/50">
                                     <td class="px-6 py-2 text-gray-400">{{ $loop->iteration }}</td>
                                     <td class="px-6 py-2 font-mono text-green-600">{{ $enrollment->admission->studentNumber }}</td>
@@ -59,7 +79,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-6 py-10 text-center text-gray-400 italic">No students found</td></tr>
+                                <tr><td colspan="3" class="px-6 py-10 text-center text-gray-400 italic">No students enrolled in this year.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

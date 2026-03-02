@@ -18,50 +18,59 @@ class TuitionController extends Controller
         $admission = Admission::where('user_id', $user->id)->firstOrFail();
         $studentNumber = $admission->studentNumber;
 
-        // Fetch both student-submitted (Tuition) and office-recorded (Payment) records
-        $tuitions = Tuition::where('studentNumber', $studentNumber)
-            ->whereIn('status', ['pending', 'approved', 'rejected'])
+        // Fetch all student payments from the payments table
+        $tuitions = Payment::where('studentNumber', $studentNumber)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $cashierPayments = Payment::where('studentNumber', $studentNumber)
-            ->where('approval_status', 'approved')
-            ->get();
-
-        // Calculate Totals
+        // Summing up totals
         $totalAssessment = Tuition::where('studentNumber', $studentNumber)->sum(DB::raw('tuition_fee + misc_fees'));
-        
-        $totalPaid = Tuition::where('studentNumber', $studentNumber)->where('status', 'approved')->sum('amount') +
-                     $cashierPayments->sum('amount');
+        $totalPaid = Payment::where('studentNumber', $studentNumber)->where('status', 'completed')->sum('amount');
 
-        return view('student.tuition.index', compact('tuitions', 'cashierPayments', 'totalAssessment', 'totalPaid'));
+        return view('student.tuition.index', compact('tuitions', 'totalAssessment', 'totalPaid'));
     }
 
     public function store(Request $request)
 {
+    // 1. Pre-process the reference number to check uniqueness correctly
+    $inputRef = $request->reference_number;
+    $formattedRef = str_starts_with(strtoupper($inputRef), 'REF-') ? strtoupper($inputRef) : 'REF-' . strtoupper($inputRef);
+    
+    // Manually check uniqueness with the prefix included
+    if (Payment::where('reference_number', $formattedRef)->exists()) {
+        return redirect()->back()->withErrors(['reference_number' => 'This reference number has already been taken.'])->withInput();
+    }
+
     $request->validate([
         'payment_method' => 'required|in:GCash,Bank Transfer',
-        'amount_type' => 'required|in:Partial,Full',
         'amount' => 'required|numeric|min:1',
-        'reference_number' => 'required|string|unique:tuitions,reference_number',
-        'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        'payment_proof' => 'required|file|mimes:jpg,jpeg,png|max:2048',
     ]);
 
     $user = Auth::user();
     $admission = Admission::where('user_id', $user->id)->firstOrFail();
-    $path = $request->file('payment_proof')->store('receipts', 'public');
+    
+    // 2. Fetch the tuition record to fix the "Field 'tuition_id' doesn't have a default value" error
+    $tuition = Tuition::where('studentNumber', $admission->studentNumber)->firstOrFail();
+    
+    $file = $request->file('payment_proof');
+    $encryptedContent = \App\Helpers\AESHelper::encrypt(file_get_contents($file->getRealPath()));
 
-    Tuition::create([
-        'studentNumber' => $admission->studentNumber,
-        'name' => $user->name, // This fixes the SQL error
-        'payment_method' => $request->payment_method,
-        'amount_type' => $request->amount_type,
-        'amount' => $request->amount,
-        'reference_number' => $request->reference_number,
-        'payment_proof' => $path,
-        'status' => 'pending',
-    ]);
+$filename = time() . '_' . $file->getClientOriginalName();
 
-    return redirect()->back()->with('success', 'Payment submitted to Cashier successfully!');
+// Store the physical file in the 'receipts' folder
+\Illuminate\Support\Facades\Storage::disk('local')->put('receipts/' . $filename, $encryptedContent);
+
+Payment::create([
+    'tuition_id'       => $tuition->id,
+    'studentNumber'    => $admission->studentNumber,
+    'amount'           => $request->amount,
+    'reference_number' => $formattedRef,
+    'receipt_path'     => $filename, 
+    'status'           => 'pending',
+    'approval_status'  => 'pending',
+]);
+
+    return redirect()->back()->with('success', 'Payment submitted successfully!');
 }
 }

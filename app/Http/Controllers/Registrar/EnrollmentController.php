@@ -8,23 +8,36 @@ use App\Models\Enrollment;
 use App\Models\Section;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
+use App\Models\FeeStructure; 
+use App\Models\Tuition;    
+use App\Models\AcademicYear;
 
 class EnrollmentController extends Controller
 {
-    public function index()
-    {
-        $enrollments = Enrollment::with(['admission', 'section'])->latest()->paginate(10);
-        $sections = Section::withCount('enrollments')->get();
-        $approvedAdmissions = Admission::where('status', 'approved')->get();
-        
-        $stats = (object) [
-            'total_enrollments' => Enrollment::count(),
-            'pending_requests'  => Enrollment::where('status', 'pending')->count(),
-            'new_this_week'     => Enrollment::where('created_at', '>=', now()->startOfWeek())->count(),
-        ];
+public function index(Request $request)
+{
+    $selectedYear = $request->get('academic_year');
+    $academicYears = \App\Models\AcademicYear::orderBy('year_range', 'desc')->get();
+    
+    // Fetch stats based on selected year (or all if none selected)
+    $stats = (object)[
+        'total_enrollments' => Enrollment::when($selectedYear, fn($q) => $q->whereHas('admission', fn($a) => $a->where('academic_year_id', $selectedYear)))->count(),
+        'pending_requests' => Enrollment::where('status', 'pending')->when($selectedYear, fn($q) => $q->whereHas('admission', fn($a) => $a->where('academic_year_id', $selectedYear)))->count(),
+        'new_this_week' => Enrollment::where('created_at', '>=', now()->startOfWeek())->count(),
+    ];
 
-        return view('registrar.enrollment.index', compact('sections', 'stats', 'enrollments', 'approvedAdmissions'));
-    }
+    $enrollments = Enrollment::with(['admission.academicYear', 'section'])
+        ->when($selectedYear, function($query) use ($selectedYear) {
+            return $query->whereHas('admission', function($q) use ($selectedYear) {
+                $q->where('academic_year_id', $selectedYear);
+            });
+        })
+        ->latest()
+        ->paginate(15)
+        ->appends($request->all());
+
+    return view('registrar.enrollment.index', compact('enrollments', 'stats', 'academicYears'));
+}
 
     public function create(Request $request)
     {
@@ -38,56 +51,79 @@ class EnrollmentController extends Controller
 
     public function store(Request $request)
 {
-    // 1. Fetch the preset fees for the student's specific grade level
-    $preset = FeeStructure::where('year_level', $request->grade_level)->first();
+    // 1. Validate the basic requirements
+    $request->validate([
+        'admission_ids' => 'required|array',
+        'section_id' => 'required|exists:sections,section_id',
+        'shift' => 'required',
+    ]);
 
-    if (!$preset) {
-        return back()->with('error', "Fee structure for {$request->grade_level} not found. Please set it up first.");
+    $activeYear = AcademicYear::where('is_current', true)->first();
+    $section = Section::find($request->section_id);
+
+    // In EnrollmentController@store
+foreach ($request->admission_ids as $id) {
+    $admission = Admission::find($id);
+    
+    $enrollment = Enrollment::create([
+        'studentNumber' => $admission->studentNumber,
+        'section_id'    => $request->section_id,
+        'shift'         => $request->shift,
+        'year_level'    => $request->grade_level, // Use form input
+        'school_year'   => $request->school_year,
+        'status'        => 'enrolled'
+    ]);
+    
+    // Fetch preset based on form's grade_level
+    $preset = FeeStructure::where('year_level', $request->grade_level)
+        ->where('academic_year_id', $activeYear->id)
+        ->first();
+    
+        // 3. Update Admission status so they don't show up in the list anymore
+        $admission->update(['status' => 'enrolled']);
+
+        // 4. Generate Tuition Assessment
+        $preset = FeeStructure::where('year_level', $admission->year_level)
+            ->where('academic_year_id', $activeYear->id)
+            ->first();
+
+        if ($preset) {
+            $tuitionData = $this->calculateFlexibleFees($admission, $enrollment, $preset, $request);
+            Tuition::create($tuitionData);
+        }
     }
 
-    // 2. Pass the preset data into the calculation logic
-    $data = $this->calculateFlexibleFees($request, $preset);
-    
-    Tuition::create($data);
-    return back()->with('success', 'Assessment generated based on grade-level presets.');
+    return redirect()->route('registrar.enrollment.index')->with('success', 'Students enrolled and assessments generated.');
 }
 
-private function calculateFlexibleFees(Request $request, $preset)
+private function calculateFlexibleFees($admission, $enrollment, $preset, $request)
 {
-    $baseTuition = $preset->base_tuition;
-    $totalMisc = $preset->total_misc;
+    $baseTuition = (float) $preset->base_tuition;
+    $totalMisc = (float) $preset->total_misc;
     $discountRate = 0;
 
-    // Apply Grade 7 Discount (30%) if applicable
-    if ($request->grade_level === 'Grade 7') {
-        $discountRate += 0.30;
-    }
+    // Apply Grade 7 Discount (30%)
+    if ($admission->year_level === 'Grade 7') { $discountRate += 0.30; }
 
-    // UMC & Sibling Logic
-    if ($request->umc_affiliation === 'worker') {
-        $discountRate = 1.0; 
-    } elseif ($request->umc_affiliation === 'member') {
-        $discountRate = 0.5;
-    } else {
-        $siblingTiers = ['none' => 0, '2nd' => 0.10, '3rd' => 0.20, '4th' => 0.30];
-        $discountRate += $siblingTiers[$request->sibling_order] ?? 0;
-    }
-
-    // Math: Apply Tuition Discount then Early Payment Discount
+    // Use default values since these aren't in your current form
+    $paymentSchedule = 'monthly'; 
+    
     $netTuition = $baseTuition * (1 - min($discountRate, 1));
-    $earlyRate = ['full' => 0.10, 'quarterly' => 0.05][$request->payment_schedule] ?? 0;
-    $finalTuition = $netTuition * (1 - $earlyRate);
-
+    
     return [
-        'studentNumber' => $request->studentNumber,
-        'name' => $request->name,
-        'grade_level' => $request->grade_level,
-        'tuition_fee' => $finalTuition,
-        'misc_fees' => $totalMisc,
-        'amount' => $finalTuition + $totalMisc,
-        'balance' => $finalTuition + $totalMisc,
-        'payment_schedule' => $request->payment_schedule,
-        'status' => 'pending'
+        'enrollment_id'    => $enrollment->id, // Critical link
+        'studentNumber'    => $admission->studentNumber,
+        'academic_year_id' => $preset->academic_year_id, 
+        'name'             => "{$admission->studentFirstName} {$admission->studentLastName}",
+        'grade_level'      => $admission->year_level,
+        'tuition_fee'      => $netTuition,
+        'misc_fees'        => $totalMisc,
+        'amount'           => $netTuition + $totalMisc,
+        'balance'          => $netTuition + $totalMisc,
+        'payment_schedule' => $paymentSchedule,
+        'status'           => 'pending'
     ];
 }
+
+
 }

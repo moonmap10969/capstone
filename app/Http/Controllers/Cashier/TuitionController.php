@@ -45,7 +45,8 @@ public function index(Request $request)
         return $student;
     });
 
-    return view('cashier.tuitions.index', compact('admissions'));
+    $academicYears = \App\Models\AcademicYear::pluck('year_range', 'id');
+return view('cashier.tuitions.index', compact('admissions', 'academicYears'));
 }
 
     public function store(Request $request)

@@ -28,7 +28,7 @@
                 <div class="flex gap-3">
                     <form action="{{ route('registrar.tuitions.sync-all') }}" method="POST" onsubmit="return confirm('Sync all students to Cashier based on Master Fees?')">
                         @csrf
-                        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-900/20 flex items-center gap-2">
+                        <button type="submit" class="bg-green-700 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-900/20 flex items-center gap-2">
                             <i data-feather="refresh-cw" class="w-4 h-4"></i> Sync All to Cashier
                         </button>
                     </form>
@@ -36,6 +36,11 @@
                         Master Fee Setup
                     </a>
                 </div>
+
+                <div class="flex gap-3">
+            <button onclick="document.getElementById('historyModal').classList.remove('hidden')" class="bg-green-700 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition shadow-lg flex items-center gap-2">
+                <i data-feather="database" class="w-4 h-4"></i> Fee History
+            </button>
             </header>
 
             @if(session('success'))
@@ -43,6 +48,7 @@
                     {{ session('success') }}
                 </div>
             @endif
+
 
             <div class="mb-6">
                 <form action="{{ route('registrar.tuitions.index') }}" method="GET" class="flex gap-2">
@@ -200,7 +206,57 @@
             </form>
         </div>
     </div>
+<div id="historyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl max-h-[85vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col border border-slate-200">
+        
+        <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <div class="flex-1">
+                <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">Master Fee History</h2>
+                <div class="mt-2 flex items-center gap-3">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Year:</label>
+                    <select onchange="filterFeeYear(this.value)" class="bg-white border border-slate-200 rounded-lg px-3 py-1 text-xs font-bold text-slate-600 outline-none focus:border-green-600 shadow-sm">
+                        @foreach($feeHistory as $yearId => $structures)
+                            <option value="year-{{ $yearId }}">
+                                {{ $structures->first()->academicYear->year_range ?? 'Legacy' }} - {{ $structures->first()->academicYear->semester ?? 'N/A' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <button onclick="document.getElementById('historyModal').classList.add('hidden')" class="bg-white p-2 rounded-full shadow-sm text-slate-400 hover:text-red-500 transition border border-slate-100">
+                <i data-feather="x" class="w-6 h-6"></i>
+            </button>
+        </div>
 
+        <div class="p-8 overflow-y-auto custom-scrollbar">
+            @forelse($feeHistory as $yearId => $structures)
+                <div id="year-{{ $yearId }}" class="fee-year-group {{ $loop->first ? '' : 'hidden' }} border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                    <div class="bg-green-700 px-6 py-3 font-black text-white text-[10px] uppercase tracking-[0.2em]">
+                        Showing Rates for: {{ $structures->first()->academicYear->year_range ?? 'Legacy' }}
+                    </div>
+                    <table class="w-full text-left text-xs">
+                        <tr class="bg-slate-50 text-slate-400 font-black uppercase text-[9px] tracking-widest border-b border-slate-100">
+                            <th class="px-6 py-4">Year Level</th>
+                            <th class="px-6 py-4">Base Tuition</th>
+                            <th class="px-6 py-4">Total Misc</th>
+                            <th class="px-6 py-4 font-black">Grand Total</th>
+                        </tr>
+                        @foreach($structures as $fee)
+                            <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
+                                <td class="px-6 py-4 font-bold text-slate-700 uppercase">{{ $fee->year_level }}</td>
+                                <td class="px-6 py-4 text-slate-500">₱ {{ number_format($fee->base_tuition, 2) }}</td>
+                                <td class="px-6 py-4 text-slate-500">₱ {{ number_format($fee->total_misc, 2) }}</td>
+                                <td class="px-6 py-4 font-black text-green-700">₱ {{ number_format($fee->base_tuition + $fee->total_misc, 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </div>
+            @empty
+                <p class="text-center text-slate-400 py-10">No history available.</p>
+            @endforelse
+        </div>
+    </div>
+</div>
     <script>
         const feeStructures = @json($feeStructures);
         let activeLevel = '';
@@ -240,6 +296,17 @@
             document.getElementById('modal_total').innerText = '₱ ' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
         feather.replace();
+
+        function filterFeeYear(yearId) {
+    // Hide all year groups
+    document.querySelectorAll('.fee-year-group').forEach(el => el.classList.add('hidden'));
+    // Show the selected one
+    const selected = document.getElementById(yearId);
+    if (selected) {
+        selected.classList.remove('hidden');
+    }
+}
     </script>
+    
 </body>
 </html>

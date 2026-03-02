@@ -7,28 +7,29 @@ use Illuminate\Http\Request;
 
 class ClassListController extends Controller
 {
-   public function index()
+   public function index(Request $request)
 {
-    // Define the logical sequence for your school
-    $customOrder = [
-        'kinder1', 'kinder2', 'kinder2', 
-        'grade1', 'grade2', 'grade3', 'grade4', 'grade5', 
-        'grade6', 'grade7', 'grade8', 'grade9', 'grade10'
-    ];
+    $selectedYear = $request->get('academic_year');
+    $academicYears = \App\Models\AcademicYear::orderBy('year_range', 'desc')->get();
+    $activeYear = \App\Models\AcademicYear::where('is_current', true)->first();
+    
+    // Fallback to current year if none selected
+    $filterId = $selectedYear ?: ($activeYear->id ?? null);
 
-    // Sort the sections based on the custom list above
-    $sections = Section::with(['enrollments.admission'])
+    $customOrder = ['kinder1', 'kinder2', 'kinder3', 'grade1', 'grade2', 'grade3', 'grade4', 'grade5', 'grade6', 'grade7', 'grade8', 'grade9', 'grade10'];
+
+    $sections = Section::with(['enrollments' => function($query) use ($filterId) {
+            $query->whereHas('admission', function($q) use ($filterId) {
+                $q->where('academic_year_id', $filterId);
+            })->with('admission');
+        }])
         ->get()
-        ->sortBy(function ($section) use ($customOrder) {
-            $index = array_search($section->year_level, $customOrder);
-            return $index !== false ? $index : 999;
-        })
+        ->sortBy(fn($section) => array_search($section->year_level, $customOrder) ?? 999)
         ->groupBy('year_level');
 
-    // The keys (year levels) will now follow the sorted order automatically
     $yearLevels = $sections->keys();
 
-    return view('registrar.classlist.index', compact('sections', 'yearLevels'));
+    return view('registrar.classlist.index', compact('sections', 'yearLevels', 'academicYears', 'activeYear'));
 }
     
 }

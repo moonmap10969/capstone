@@ -9,15 +9,18 @@ class Payment extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'studentNumber',
-        'amount',
-        'payment_method',
-        'status',
-        'approval_status',
-        'reference_number',
-        'payment_proof'
-    ];
+protected $fillable = [
+    'enrollment_id',
+    'tuition_id',
+    'studentNumber',
+    'amount',
+    'payment_method',
+    'reference_number',
+    'receipt_path',
+    'status',
+    'approval_status',
+    'remarks',
+];
 
     protected $attributes = [
         'status' => 'completed',
@@ -27,8 +30,25 @@ class Payment extends Model
     /**
      * Relationship: Payment belongs to Tuition
      */
-    public function tuition()
-    {
-        return $this->belongsTo(Tuition::class, 'studentNumber', 'studentNumber');
-    }
+public function tuition()
+{
+    return $this->belongsTo(Tuition::class);
+}
+
+public function enrollment()
+{
+    return $this->belongsTo(Enrollment::class);
+}
+
+public function admission()
+{
+    return $this->belongsTo(Admission::class, 'studentNumber', 'studentNumber');
+}
+
+public function approvedPayments()
+{
+    return $this->hasMany(Payment::class, 'studentNumber', 'studentNumber')
+                ->where('approval_status', 'approved');
+}
+
 }

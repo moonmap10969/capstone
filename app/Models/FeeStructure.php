@@ -15,6 +15,7 @@ class FeeStructure extends Model
      * @var array
      */
     protected $fillable = [
+        'academic_year_id',
         'year_level',
         'base_tuition',
         'total_misc',
@@ -44,4 +45,10 @@ class FeeStructure extends Model
         'base_tuition' => 'decimal:2',
         'total_misc'   => 'decimal:2',
     ];
+
+  
+public function academicYear()
+{
+    return $this->belongsTo(AcademicYear::class);
+}
 }

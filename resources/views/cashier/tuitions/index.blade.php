@@ -22,34 +22,47 @@
             <p class="text-gray-500 mt-1">Cross-reference Registrar assessments with student payment history.</p>
         </header>
 
-        {{-- Filter/Search --}}
-        <div class="mb-6">
-            <form action="{{ route('cashier.tuitions.index') }}" method="GET" class="flex flex-wrap gap-3 items-center">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search ID or Name..." 
-                    class="w-full max-w-xs px-5 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-green-600 outline-none shadow-sm transition-all">
-                
-                <select name="grade_filter" onchange="this.form.submit()" 
-                    class="w-full max-w-[180px] px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-green-600 outline-none shadow-sm cursor-pointer">
-                    <option value="">All Grade Levels</option>
-                    @php $levels = ['kinder1','kinder2','kinder3','grade1','grade2','grade3','grade4','grade5','grade6','grade7','grade8','grade9','grade10']; @endphp
-                    @foreach($levels as $level)
-                        <option value="{{ $level }}" {{ request('grade_filter') == $level ? 'selected' : '' }}>
-                            {{ strtoupper($level) }}
-                        </option>
-                    @endforeach
-                </select>
+      {{-- Filter/Search --}}
+<div class="mb-6">
+    <form action="{{ route('cashier.tuitions.index') }}" method="GET" class="flex flex-wrap gap-3 items-center">
 
-                <button type="submit" class="bg-green-700 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-800 transition shadow-sm">
-                    Apply Filter
-                </button>
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search ID or Name..." 
+            class="w-full max-w-xs px-5 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-green-600 outline-none shadow-sm transition-all">
 
-                @if(request('search') || request('grade_filter'))
-                    <a href="{{ route('cashier.tuitions.index') }}" class="text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-tighter">
-                        ✕ Clear Filters
-                    </a>
-                @endif
-            </form>
-        </div>
+        {{-- Grade Level Filter --}}
+        <select name="grade_filter" onchange="this.form.submit()" 
+            class="w-full max-w-[180px] px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-green-600 outline-none shadow-sm cursor-pointer">
+            <option value="">All Grade Levels</option>
+            @php $levels = ['kinder1','kinder2','kinder3','grade1','grade2','grade3','grade4','grade5','grade6','grade7','grade8','grade9','grade10']; @endphp
+            @foreach($levels as $level)
+                <option value="{{ $level }}" {{ request('grade_filter') == $level ? 'selected' : '' }}>
+                    {{ strtoupper($level) }}
+                </option>
+            @endforeach
+        </select>
+
+        {{-- Academic Year Filter --}}
+        <select name="academic_year_id" onchange="this.form.submit()"
+            class="w-full max-w-[180px] px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-green-600 outline-none shadow-sm cursor-pointer">
+            <option value="">All Academic Years</option>
+            @foreach($academicYears as $id => $year)
+                <option value="{{ $id }}" {{ request('academic_year_id') == $id ? 'selected' : '' }}>
+                    {{ $year }}
+                </option>
+            @endforeach
+        </select>
+
+        <button type="submit" class="bg-green-700 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-800 transition shadow-sm">
+            Apply Filter
+        </button>
+
+        @if(request('search') || request('grade_filter') || request('academic_year_id'))
+            <a href="{{ route('cashier.tuitions.index') }}" class="text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-tighter">
+                ✕ Clear Filters
+            </a>
+        @endif
+    </form>
+</div>
 
         {{-- Table --}}
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -162,7 +175,7 @@
                                 <p class="text-[9px] text-slate-400 uppercase font-medium">${p.payment_method} • ${date}</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                ${p.receipt_path ? `<a href="/cashier/payments/view/${p.id}" target="_blank" class="text-[9px] font-black text-green-600 uppercase">View</a>` : ''}
+                               ${p.receipt_path ? `<a href="/cashier/payments/${p.id}/show" target="_blank" class="text-[9px] font-black text-green-600 uppercase">View</a>` : ''}
                                 <span class="text-[9px] font-black text-green-600 uppercase">Paid</span>
                             </div>
                         </div>

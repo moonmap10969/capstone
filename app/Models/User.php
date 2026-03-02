@@ -23,24 +23,20 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \App\Notifications\CustomVerifyEmail);
     }
-    // Helper to check for registrar role
+
     public function isRegistrar(): bool
     {
         return $this->role === 'registrar';
     }
 
-    public function admission(): HasOne {
-        return $this->hasOne(Admission::class);
-    }
-
     public function documents(): HasMany {
         return $this->hasMany(Document::class, 'user_id');
     }
-
-    public function admissions(): HasMany {
-        return $this->hasMany(Admission::class);
+    
+    public function admissions()
+    {
+        return $this->hasMany(\App\Models\Admission::class);
     }
-
     public function payments(): HasMany {
         return $this->hasMany(Payment::class);
     }

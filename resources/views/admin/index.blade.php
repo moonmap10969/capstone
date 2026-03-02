@@ -15,10 +15,29 @@
     <!-- Main Content -->
     <main class="flex-1 p-8">
         <!-- Header -->
-        <div class="flex justify-between items-center mb-12">
-            <h1 class="text-4xl font-bold text-green-700">Admin Dashboard</h1>
-            <p class="text-gray-600">Manage your student portal efficiently</p>
+       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-green-800 tracking-tight">Admin Dashboard</h1>
+        <p class="text-sm text-gray-500 font-medium">Manage your student portal efficiently</p>
+    </div>
+
+    <a href="{{ route('admin.ay.index') }}" class="group flex items-center bg-white border border-green-200 rounded-xl p-1 pr-4 shadow-sm hover:shadow-md hover:border-green-500 transition-all duration-200">
+        <div class="bg-green-600 text-white p-2 rounded-lg group-hover:bg-green-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
         </div>
+        <div class="ml-3">
+            <p class="text-[10px] font-black text-green-600 uppercase tracking-wider leading-none">Active Period</p>
+            <p class="text-sm font-bold text-gray-800">
+                {{ $activeYear ? $activeYear->year_range . ' (' . $activeYear->semester . ')' : 'Initialize System' }}
+            </p>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-3 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+    </a>
+</div>
 
         <!-- Management Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

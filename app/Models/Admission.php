@@ -33,6 +33,10 @@ public function enrollment(): HasOne
        
         return $this->hasOne(Enrollment::class, 'admission_id');
     }
+public function academicYear()
+{
+    return $this->belongsTo(AcademicYear::class);
+}
 
 
 }

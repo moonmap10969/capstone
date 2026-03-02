@@ -4,7 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Storage;
+use App\Helpers\AESHelper;
 // Auth controllers
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -16,7 +17,9 @@ use App\Http\Controllers\AdmissionController;
 // Admin controllers
 use App\Http\Controllers\Admin\{
     UserController,
+    AcademicYearController,
     AdminScheduleController,
+    DashboardController,
     ReportController as AdminReportController,
     TuitionController as AdminTuitionController,
     DocumentController as AdminDocumentController,
@@ -203,8 +206,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/', fn() => view('admin.index'))->name('index');
-
+    Route::get('/', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('index');
         Route::resources([
             'users' => UserController::class,
             'documents' => AdminDocumentController::class,
@@ -212,7 +214,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])
             'schedule' => AdminScheduleController::class,
             'sections' => AdminSectionsController::class,
         ]);
+  Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('ay.index');
+        Route::post('/academic-years', [AcademicYearController::class, 'store'])->name('ay.store');
+        Route::post('/academic-year/{id}/set', [AcademicYearController::class, 'setCurrent'])->name('ay.set');
     });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -282,20 +288,15 @@ Route::middleware(['auth', 'verified', 'role:registrar'])
     });
 /*
 |--------------------------------------------------------------------------
-| Cashier Routes
+| Cashier Routes (Restricted)
 |--------------------------------------------------------------------------
 */
-
 Route::middleware(['auth', 'verified', 'role:cashier'])
     ->prefix('cashier')
-    ->name('cashier.') // This automatically adds 'cashier.' to all names below
+    ->name('cashier.')
     ->group(function () {
         Route::get('/', [CashierDashboardController::class, 'index'])->name('index');
-
-        // Students
         Route::resource('students', CashierStudentController::class)->only(['index', 'show']);
-
-        // Enrollment
         Route::get('enrollment', [EnrollmentController::class, 'index'])->name('enrollment');
 
         // Tuitions
@@ -303,39 +304,59 @@ Route::middleware(['auth', 'verified', 'role:cashier'])
         Route::patch('tuitions/{tuition}/approve', [CashierTuitionController::class, 'approve'])->name('tuitions.approve');
         Route::patch('tuitions/{tuition}/reject', [CashierTuitionController::class, 'reject'])->name('tuitions.reject');
         Route::patch('tuitions/{tuition}/set-payment', [CashierTuitionController::class, 'setPayment'])->name('tuitions.setPayment');
-
-        // Payments
-        // Inside your existing Route::name('cashier.') group:
-Route::prefix('payments')->name('payments.')->group(function () {
-    Route::get('/', [CashierPaymentController::class, 'index'])->name('index');
-    Route::get('/create', [CashierPaymentController::class, 'create'])->name('create');
-    Route::post('/', [CashierPaymentController::class, 'store'])->name('store');
-    
-    // The specific route causing your error
-    Route::get('/{payment}/edit', [CashierPaymentController::class, 'edit'])->name('edit');
-    
-    // Update route - use match to support both PUT and PATCH from your forms
-    Route::match(['put', 'patch'], '/{payment}', [CashierPaymentController::class, 'update'])->name('update');
-    
-    Route::delete('/{payment}', [CashierPaymentController::class, 'destroy'])->name('destroy');
-    
-    // For the "Verify" button in your index
-    Route::post('/{id}/approve', [CashierPaymentController::class, 'approveOnline'])->name('approve');
-});
-        // FIX: Remove 'cashier.' from the name here because it's inherited from the group
-        Route::post('payments/approve/{id}', [CashierPaymentController::class, 'approveOnline'])->name('approve.payment');
-
-        // **View encrypted receipt**
-        Route::get('payments/{payment}/view', [CashierPaymentController::class, 'show'])
-            ->name('payments.show');
-
-        // Reports
-        // Route::prefix('reports')->group(function () {
-        //     Route::get('/payment-reports', [CashierReportController::class, 'paymentReports'])->name('reports.payment-reports');
-        //     Route::get('/enrollment-summary', [CashierReportController::class, 'enrollmentSummary'])->name('reports.enrollment-summary');
-
-
-        // Student search
         Route::get('/search-student', [CashierTuitionController::class, 'searchStudent'])->name('search.student');
-  });
+
+        // Payments Group
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [CashierPaymentController::class, 'index'])->name('index');
+            Route::get('/create', [CashierPaymentController::class, 'create'])->name('create');
+            Route::post('/', [CashierPaymentController::class, 'store'])->name('store');
+            Route::get('/{id}/show', [CashierPaymentController::class, 'show'])->name('show');
+            Route::get('/{id}/download', [CashierPaymentController::class, 'download'])->name('download');
+            Route::post('/{id}/approve', [CashierPaymentController::class, 'approveOnline'])->name('approve');
+            Route::post('/{id}/reject', [CashierPaymentController::class, 'reject'])->name('reject');
+        }); 
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Shared Routes (Accessible by Students & Cashiers)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/view-payment-receipt/{filename}', function ($filename) {
+        // Look for the record in receipt_path as requested
+        $payment = \App\Models\Payment::where('receipt_path', 'LIKE', '%' . $filename)->firstOrFail();
+
+        // Student Security Check
+        if (Auth::user()->role === 'student') {
+            $student = \App\Models\Admission::where('user_id', Auth::id())->first();
+            if (!$student || $payment->studentNumber !== $student->studentNumber) {
+                abort(403, "Unauthorized: This is not your receipt.");
+            }
+        }
+
+        $path = 'receipts/' . $filename;
+        
+        if (!Storage::disk('local')->exists($path)) {
+            abort(404, "File not found in storage/app/receipts/");
+        }
+
+        // Determine MimeType manually to avoid "undefined" errors
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $mimes = [
+            'png'  => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'pdf'  => 'application/pdf'
+        ];
+        $mimeType = $mimes[$extension] ?? 'image/jpeg';
+
+        $scrambledData = Storage::disk('local')->get($path);
+        $cleanData = AESHelper::decrypt($scrambledData);
+
+        return response($cleanData, 200)->header('Content-Type', $mimeType);
+    })->where('filename', '.*')->name('payments.receipt.view');
+});
+
 require __DIR__ . '/auth.php';

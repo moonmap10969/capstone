@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Premium Payment Portal</title>
+    <title>Payment Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -21,11 +21,23 @@
                     Clear Form
                 </button>
             </header>
-
+@if ($errors->any())
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-xl">
+        <ul class="list-disc ml-5 text-red-700 font-bold">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div class="lg:col-span-2 space-y-6">
                     <form action="{{ route('cashier.payments.store') }}" method="POST" id="paymentForm" enctype="multipart/form-data" class="space-y-6">
                         @csrf
+                       {{-- Hidden Fields for Data Sync --}}
+                    <input type="hidden" name="enrollment_id" id="enrollment_id_input">
+                    <input type="hidden" name="tuition_id" id="tuition_id_input">
+                    <input type="hidden" name="academic_year_id" id="academic_year_id_input">
                         
                         <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                             <div class="flex items-center gap-3 mb-6">
@@ -42,9 +54,9 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Verified Name / Balance</label>
-                                    <div id="verifyBox" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 min-h-[62px] flex items-center">
-                                        <span id="nameDisplay" class="text-slate-400 font-medium italic">Awaiting Student ID...</span>
-                                    </div>
+                                        <div id="verifyBox" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 min-h-[62px] flex items-center">
+                                    <span id="nameDisplay" class="text-slate-400 font-medium italic">Awaiting Student ID...</span>
+                                     </div>
                                 </div>
                             </div>
                         </div>
@@ -86,108 +98,122 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Upload Encrypted Receipt (ISO Standard)</label>
-                                    <input type="file" name="payment_proof" id="fileInput" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-green-600 hover:file:text-white cursor-pointer">
+                                    <input type="file" name="receipt_path" id="fileInput" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-green-600 hover:file:text-white cursor-pointer">
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
 
-        <div class="lg:col-span-1">
-            <div class="bg-green-700 rounded-[2rem] p-8 text-white shadow-2xl sticky top-8">
-                <div class="flex justify-between items-start mb-10">
-                    <div class="bg-white/20 p-3 rounded-2xl backdrop-blur-md font-black text-xl text-center w-12 h-12">₱</div>
-                    <div class="text-right">
-                        <p class="text-white/60 text-xs font-bold uppercase tracking-widest">Collection</p>
-                        <p class="text-xl font-black uppercase tracking-tighter">Terminal 01</p>
+                <div class="lg:col-span-1">
+                    <div class="bg-green-700 rounded-[2rem] p-8 text-white shadow-2xl sticky top-8">
+                        <div class="flex justify-between items-start mb-10">
+                            <div class="bg-white/20 p-3 rounded-2xl backdrop-blur-md font-black text-xl text-center w-12 h-12">₱</div>
+                            <div class="text-right">
+                                <p class="text-white/60 text-xs font-bold uppercase tracking-widest">Collection</p>
+                                <p class="text-xl font-black uppercase tracking-tighter">Terminal 01</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 mb-8 text-sm">
+                            <div class="flex justify-between text-white/70">
+                                <span>Total Owed:</span>
+                                <span id="summaryBalance" class="font-bold text-white">₱0.00</span>
+                            </div>
+                            <div class="flex justify-between text-white/70">
+                                <span>Paying Now:</span>
+                                <span id="summaryPaying" class="font-bold text-white">₱0.00</span>
+                            </div>
+                            <div class="flex justify-between text-white/70 border-t border-white/20 pt-4">
+                                <span>Total After Payment:</span>
+                                <span id="summaryRemaining" class="font-black text-2xl">₱0.00</span>
+                            </div>
+                        </div>
+
+                        <button form="paymentForm" id="submitBtn" type="submit" class="w-full bg-white text-green-700 font-black py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all active:scale-95 mb-4 uppercase text-xs tracking-widest">
+                            Confirm Payment
+                        </button>
+                        <p class="text-[10px] text-white/40 text-center uppercase font-bold tracking-widest">Encrypted Data Transmission Enabled</p>
                     </div>
                 </div>
-
-                <div class="space-y-4 mb-8 text-sm">
-                    <div class="flex justify-between text-white/70">
-                        <span>Total Owed:</span>
-                        <span id="summaryBalance" class="font-bold text-white">₱0.00</span>
-                    </div>
-                    <div class="flex justify-between text-white/70">
-                        <span>Paying Now:</span>
-                        <span id="summaryPaying" class="font-bold text-white">₱0.00</span>
-                    </div>
-                    <div class="flex justify-between text-white/70 border-t border-white/20 pt-4">
-                        <span>Total After Payment:</span>
-                        <span id="summaryRemaining" class="font-black text-2xl">₱0.00</span>
-                    </div>
-                </div>
-
-                <button form="paymentForm" id="submitBtn" type="submit" class="w-full bg-white text-green-700 font-black py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all active:scale-95 mb-4 uppercase text-xs tracking-widest">
-                    Confirm Payment
-                </button>
-                <p class="text-[10px] text-white/40 text-center uppercase font-bold tracking-widest">Encrypted Data Transmission Enabled</p>
-            </div>
-        </div>
             </div>
         </div>
     </main>
 
-  <script>
-const studentMap = @json($students);
-const idInput = document.getElementById('studentNumber');
-const nameDisplay = document.getElementById('nameDisplay');
-const amountInput = document.getElementById('amountInput');
+<script>
+    const studentMap = @json($students);
+    const idInput = document.getElementById('studentNumber');
+    const nameDisplay = document.getElementById('nameDisplay');
+    const amountInput = document.getElementById('amountInput');
+    const summaryBalance = document.getElementById('summaryBalance');
+    const summaryPaying = document.getElementById('summaryPaying');
+    const summaryRemaining = document.getElementById('summaryRemaining');
+    const enrollmentInput = document.getElementById('enrollment_id_input');
+    const tuitionInput = document.getElementById('tuition_id_input');
+    const academicYearInput = document.getElementById('academic_year_id_input'); // Added Fix
 
-const summaryBalance = document.getElementById('summaryBalance');
-const summaryPaying = document.getElementById('summaryPaying');
-const summaryRemaining = document.getElementById('summaryRemaining');
+    const format = (num) => '₱' + parseFloat(num || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+    let currentBalance = 0;
 
-const format = (num) => '₱' + parseFloat(num || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+    idInput.addEventListener('input', function() {
+        const student = studentMap[this.value];
+        if (student) {
+            currentBalance = parseFloat(student.balance);
+            const fullName = `${student.studentFirstName} ${student.studentLastName}`;
+            const academicYearLabel = student.academic_year || 'N/A';
+            
+            nameDisplay.innerHTML = `
+                <span class="text-green-700 font-bold">${fullName}</span>
+                <span class="mx-2 text-slate-300">|</span>
+                <span class="text-blue-600 font-semibold">${academicYearLabel}</span>
+                <span class="mx-2 text-slate-300">|</span>
+                <span class="text-red-600 font-black">${format(currentBalance)}</span>
+            `;
+            
+            summaryBalance.innerText = format(currentBalance);
+            summaryPaying.innerText = '₱0.00';
+            summaryRemaining.innerText = format(currentBalance);
+            
+            // Populate hidden IDs for the form submission
+            enrollmentInput.value = student.enrollment_id;
+            tuitionInput.value = student.tuition_id;
+            academicYearInput.value = student.academic_year_id; // Added Fix
+            amountInput.value = '';
+        } else {
+            resetUI();
+        }
+    });
 
-let currentBalance = 0;
+    amountInput.addEventListener('input', function() {
+        let payingNow = parseFloat(this.value) || 0;
+        if (payingNow > currentBalance) payingNow = currentBalance;
+        summaryPaying.innerText = format(payingNow);
+        summaryRemaining.innerText = format(currentBalance - payingNow);
+    });
 
-// Update UI when student ID is entered
-idInput.addEventListener('input', function() {
-    const student = studentMap[this.value];
-    if (student) {
-        currentBalance = parseFloat(student.balance);
-        nameDisplay.innerHTML = `<span class="text-green-700 font-bold">${student.name}</span> <span class="mx-2 text-slate-300">|</span> <span class="text-red-600 font-black">${format(currentBalance)}</span>`;
-        summaryBalance.innerText = format(currentBalance);
-        summaryPaying.innerText = '₱0.00';
-        summaryRemaining.innerText = format(currentBalance);
-        amountInput.value = '';
-    } else {
+    function toggleDigitalFields(show) {
+        const digitalFields = document.getElementById('digitalFields');
+        document.getElementById('fileInput').required = show;
+        document.getElementById('refInput').required = show;
+        digitalFields.classList.toggle('hidden', !show);
+    }
+
+    function resetPortal() {
+        document.getElementById('paymentForm').reset();
+        toggleDigitalFields(false);
         resetUI();
     }
-});
 
-// Update paying and remaining dynamically
-amountInput.addEventListener('input', function() {
-    let payingNow = parseFloat(this.value) || 0;
-    if (payingNow > currentBalance) payingNow = currentBalance; // prevent overpay
-    summaryPaying.innerText = format(payingNow);
-    summaryRemaining.innerText = format(currentBalance - payingNow);
-});
-
-function toggleDigitalFields(show) {
-    const digitalFields = document.getElementById('digitalFields');
-    const fileInput = document.getElementById('fileInput');
-    const refInput = document.getElementById('refInput');
-    
-    digitalFields.classList.toggle('hidden', !show);
-    fileInput.required = show;
-    refInput.required = show;
-}
-
-function resetPortal() {
-    document.getElementById('paymentForm').reset();
-    toggleDigitalFields(false);
-    resetUI();
-}
-
-function resetUI() {
-    currentBalance = 0;
-    nameDisplay.innerHTML = idInput.value.length > 0 ? '<span class="text-red-400">Not Found</span>' : 'Awaiting Student ID...';
-    summaryBalance.innerText = '₱0.00';
-    summaryPaying.innerText = '₱0.00';
-    summaryRemaining.innerText = '₱0.00';
-}
+   function resetUI() {
+        currentBalance = 0;
+        nameDisplay.innerHTML = idInput.value.length > 0 ? '<span class="text-red-400">Not Found</span>' : 'Awaiting Student ID...';
+        summaryBalance.innerText = '₱0.00';
+        summaryPaying.innerText = '₱0.00';
+        summaryRemaining.innerText = '₱0.00';
+        enrollmentInput.value = '';
+        tuitionInput.value = '';
+        academicYearInput.value = ''; 
+    }
 </script>
 </body>
 </html>

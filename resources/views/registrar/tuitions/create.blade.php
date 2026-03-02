@@ -10,12 +10,19 @@
 </head>
 <body class="bg-[#f1f5f9] min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-5xl">
-        <header class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Master Fee Configuration</h1>
-            <a href="{{ route('registrar.tuitions.index') }}" class="text-slate-500 hover:text-green-700 font-bold text-sm transition flex items-center gap-1">
-                <i data-feather="arrow-left" class="w-4 h-4"></i> Back
-            </a>
-        </header>
+      <input type="hidden" name="academic_year_id" value="{{ $activeYear->id ?? '' }}">
+
+<header class="flex justify-between items-end mb-4">
+    <div>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight uppercase">Master Fee Configuration</h1>
+        <p class="text-[10px] font-bold text-green-600 uppercase tracking-widest mt-1">
+            Target Period: <span class="bg-green-100 px-2 py-0.5 rounded">{{ $activeYear->year_range ?? 'NOT SET' }} ({{ $activeYear->semester ?? 'Initialize System' }})</span>
+        </p>
+    </div>
+    <a href="{{ route('registrar.tuitions.index') }}" class="text-slate-500 hover:text-green-700 font-bold text-sm transition flex items-center gap-1 mb-1">
+        <i data-feather="arrow-left" class="w-4 h-4"></i> Back
+    </a>
+</header>
 
         <form id="masterFeeForm" action="{{ route('registrar.fee-structures.update') }}" method="POST" class="bg-white rounded-[1.5rem] border border-slate-200 shadow-2xl overflow-hidden">
             @csrf

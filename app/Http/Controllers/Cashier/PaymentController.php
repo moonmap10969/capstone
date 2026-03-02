@@ -3,226 +3,240 @@
 namespace App\Http\Controllers\Cashier;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use App\Helpers\AESHelper;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\Tuition;
 use App\Models\Payment;
+use App\Models\Enrollment;
 use App\Models\Admission;
+use App\Models\AcademicYear;
+
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | INDEX
-    |--------------------------------------------------------------------------
-    */
- public function index(Request $request)
-{
-    $query = Admission::leftJoin('tuitions', 'admissions.studentNumber', '=', 'tuitions.studentNumber')
-        ->select(
-            'admissions.studentNumber',
-            'admissions.studentFirstName',
-            'admissions.studentLastName',
-            'tuitions.id as tuition_id', // Alias this clearly
-            'tuitions.paid_amount',
-            'tuitions.balance',
-            'tuitions.status',
-            'tuitions.payment_method'
-        );
-
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('admissions.studentNumber', 'like', "%{$search}%")
-              ->orWhere('admissions.studentLastName', 'like', "%{$search}%")
-              ->orWhere('admissions.studentFirstName', 'like', "%{$search}%");
-        });
-    }
-
-    $tuitions = $query->orderBy('admissions.studentLastName', 'asc')->paginate(10);
-    $totalCollected = Tuition::sum('paid_amount');
-    $totalBalance = Tuition::sum('balance');
-
-    // FIX: Define the variable causing your error
-    $transactionHistory = Payment::orderBy('created_at', 'desc')->limit(5)->get();
-
-    return view('cashier.payments.index', compact('tuitions', 'totalCollected', 'totalBalance', 'transactionHistory'));
-}
-    /*
-    |--------------------------------------------------------------------------
-    | APPROVE ONLINE PAYMENT
-    |--------------------------------------------------------------------------
-    */
-    public function approveOnline($id)
+    public function index(Request $request)
     {
-        $tuition = Tuition::findOrFail($id);
+        // Use this for the dashboard cards (Totals)
+        $baseQuery = Payment::with(['enrollment', 'tuition.academicYear']);
 
-        // 1. Update the Main Tuition Record (Balance/Status)
-        $tuition->balance -= $tuition->amount;
-        $tuition->paid_amount += $tuition->amount;
-        $tuition->status = $tuition->balance <= 0 ? 'paid' : 'partial';
-        $tuition->save();
-
-        // 2. Create the Official Payment Record
-        $newPayment = new Payment();
-        $newPayment->studentNumber = $tuition->studentNumber;
-        $newPayment->amount = $tuition->amount;
-        $newPayment->payment_method = $tuition->payment_method;
-        $newPayment->reference_number = $tuition->reference_number;
-        $newPayment->status = 'completed';
-        $newPayment->approval_status = 'approved';
-
-        // 3. Migrate & Encrypt the Student's Receipt
-        if ($tuition->payment_proof && Storage::disk('public')->exists($tuition->payment_proof)) {
-            $content = Storage::disk('public')->get($tuition->payment_proof);
-            $encryptedContent = AESHelper::encrypt($content);
-            $extension = pathinfo($tuition->payment_proof, PATHINFO_EXTENSION);
-            
-            $newPath = 'receipts/' . $tuition->studentNumber . '_' . time() . '.' . $extension . '.dat';
-            Storage::disk('local')->put($newPath, $encryptedContent);
-            
-            $newPayment->receipt_path = $newPath;
-            
-            // Clean up the temporary public file
-            Storage::disk('public')->delete($tuition->payment_proof);
+        // Apply Filters to the base query
+        if ($request->filled('academic_year_id')) {
+            $baseQuery->where('academic_year_id', $request->academic_year_id);
         }
 
-        $newPayment->save();
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $baseQuery->where(function ($q) use ($search) {
+                $q->where('studentNumber', 'like', "%{$search}%")
+                ->orWhere('reference_number', 'like', "%{$search}%");
+            });
+        }
 
-        return redirect()->back()->with('success', 'Online payment approved and record encrypted.');
+        // 1. Get the Dashboard Data (This stays a Collection for sum/count)
+        $payments = $baseQuery->get(); 
+
+        // 2. Get the Paginators for the two tabs
+        $walkInPayments = (clone $baseQuery)->where('origin', 'cashier')
+            ->latest()
+            ->paginate(10, ['*'], 'walkin_page')
+            ->appends($request->all());
+
+        $studentSubmissions = (clone $baseQuery)->where('origin', 'student')
+            ->latest()
+            ->paginate(10, ['*'], 'student_page')
+            ->appends($request->all());
+
+        $academicYears = \App\Models\AcademicYear::pluck('year_range', 'id');
+
+        return view('cashier.payments.index', compact(
+            'walkInPayments', 
+            'studentSubmissions', 
+            'payments', 
+            'academicYears'
+        ));
+    }
+    public function create()
+    {
+        $students = Enrollment::with(['tuition.academicYear', 'admission'])
+            ->whereHas('tuition')
+            ->get()
+            ->map(function($e) {
+                return [
+                    'enrollment_id'    => $e->id,
+                    'tuition_id'       => $e->tuition->id,
+                    'academic_year_id' => $e->tuition->academic_year_id, // Add this line
+                    'studentNumber'    => $e->studentNumber,
+                    'balance'          => $e->tuition->balance,
+                    'studentFirstName' => $e->admission->studentFirstName ?? 'N/A',
+                    'studentLastName'  => $e->admission->studentLastName ?? '',
+                    'academic_year'    => $e->tuition->academicYear->year_range ?? 'N/A', 
+                ];
+            })
+            ->keyBy('studentNumber'); 
+
+        return view('cashier.payments.create', compact('students'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STORE PAYMENT (WALK-IN)
-    |--------------------------------------------------------------------------
-    */
+
     public function store(Request $request)
     {
-        $request->validate([
-            'studentNumber' => 'required',
-            'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|string',
-            'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5000'
-        ]);
+    // 1. Get the tuition
+    $tuition = Tuition::find($request->tuition_id);
 
-        $tuition = Tuition::where('studentNumber', $request->studentNumber)->first();
-
-        if (!$tuition) {
-            return redirect()->back()->with('error', 'No tuition record found.');
-        }
-
-        $tuition->balance -= $request->amount;
-        $tuition->paid_amount += $request->amount;
-        $tuition->status = $tuition->balance <= 0 ? 'paid' : 'partial';
-        $tuition->save();
-
-        $newPayment = new Payment();
-        $newPayment->studentNumber = $request->studentNumber;
-        $newPayment->amount = $request->amount;
-        $newPayment->payment_method = $request->payment_method;
-        $newPayment->status = 'completed';
-        $newPayment->approval_status = 'approved';
-        $newPayment->reference_number = 'REF-' . time() . '-' . Str::random(5);
-
-        if ($request->hasFile('payment_proof')) {
-            $file = $request->file('payment_proof');
-            $content = file_get_contents($file);
-            $encryptedContent = AESHelper::encrypt($content);
-            $extension = $file->getClientOriginalExtension();
-            $path = 'receipts/' . $request->studentNumber . '_' . time() . '.' . $extension . '.dat';
-            Storage::disk('local')->put($path, $encryptedContent);
-            $newPayment->receipt_path = $path;
-        }
-
-        $newPayment->save();
-
-        return redirect()->route('cashier.payments.index')->with('success', 'Payment processed and file encrypted.');
+    if (!$tuition) {
+        return back()->with('error', 'Tuition not found for this student.');
     }
+
+    // 2. Determine remaining balance
+    $totalPaid = $tuition->payments()->sum('amount');
+    $remainingBalance = max(0, $tuition->amount - $totalPaid);
+
+    // 3. Validate payment amount does not exceed remaining balance
+    if ($request->amount > $remainingBalance) {
+        return back()->with('error', "Payment cannot exceed remaining balance of ₱" . number_format($remainingBalance, 2));
+    }
+
+    // 4. Generate reference number with REF- prefix
+    $referenceNumber = 'REF-' . ($request->reference_number ?? strtoupper(Str::random(8)));
+
+    // 5. Handle receipt upload with AES encryption
+    if ($request->hasFile('receipt')) {
+        $file = $request->file('receipt');
+        $contents = file_get_contents($file->getRealPath());       // read file content
+        $encryptedContents = AESHelper::encrypt($contents);       // encrypt content
+        $fileName = 'receipts/' . time() . '_' . $file->getClientOriginalName();
+        file_put_contents(storage_path('app/' . $fileName), $encryptedContents); // save encrypted file
+        $receiptPath = $fileName;
+    } else {
+        $receiptPath = 'receipts/placeholder.pdf';
+    }
+
+    // 6. Determine academic year
+    $academicYearId = $request->academic_year_id 
+                    ?? $tuition->academic_year_id 
+                    ?? AcademicYear::where('is_current', 1)->value('id');
+
+    // 7. Create the payment
+    $payment = $tuition->payments()->create([
+        'enrollment_id'    => $tuition->enrollment_id,
+        'tuition_id'       => $tuition->id,
+        'studentNumber'    => $tuition->studentNumber,
+        'amount'           => min($request->amount, $tuition->balance), // don't allow overpayment
+        'payment_method'   => $request->payment_method,
+        'reference_number' => 'REF-' . ($request->reference_number ?? strtoupper(Str::random(8))),
+        'origin'           => 'cashier',
+        'status'           => 'completed',
+        'approval_status'  => 'approved',
+        'academic_year_id' => $academicYearId,
+        'description'      => $request->description,
+        'receipt_path'     => $receiptPath,
+    ]);
+
+    // 8. Reduce the tuition balance
+    $tuition->balance -= $payment->amount;
+    $tuition->save();
+
+    return back()->with('success', 'Payment successfully recorded.');
+    }
+
+    // 2. Updated Approve Method (For Online Submissions)
+    public function approveOnline($id)
+    {
+        $payment = Payment::findOrFail($id);
+        
+        // Find the specific tuition record for this student's specific admission
+        $tuition = Tuition::where('admission_id', $payment->admission_id)->firstOrFail();
+
+        if ($payment->status !== 'completed') {
+            DB::transaction(function () use ($payment, $tuition) {
+                $tuition->increment('paid_amount', $payment->amount);
+                $tuition->decrement('balance', $payment->amount);
+                
+                $tuition->update([
+                    'status' => $tuition->balance <= 0 ? 'paid' : 'partial'
+                ]);
+
+                $payment->update([
+                    'status' => 'completed', 
+                    'approval_status' => 'approved'
+                ]);
+            });
+        }
+        return redirect()->back()->with('success', 'Payment verified and balance updated.');
+    }
+
+        public function reject(Request $request, $id)
+        {
+            $request->validate(['remarks' => 'required|string|max:255']);
+            $payment = Payment::findOrFail($id);
+            $payment->update([
+                'status' => 'rejected',
+                'remarks' => $request->remarks,
+                'approval_status' => 'rejected'
+            ]);
+            return redirect()->back()->with('success', 'Payment rejected with remarks.');
+        }
 
     public function show($id)
     {
         $payment = Payment::findOrFail($id);
 
-        if (!$payment->receipt_path || !Storage::disk('local')->exists($payment->receipt_path)) {
-            abort(404, 'Receipt not found.');
+        // 1. Handle Cash Receipts
+        if ($payment->receipt_path === 'CASH_PAYMENT' || $payment->payment_method === 'cash') {
+            $student = \App\Models\Admission::where('studentNumber', $payment->studentNumber)->first();
+            $name = $student ? "{$student->studentFirstName} {$student->studentLastName}" : "Unknown Student";
+            
+            return response("
+                <div style='font-family:sans-serif; max-width:400px; margin:50px auto; padding:30px; border:2px solid #e2e8f0; border-radius:20px; text-align:center;'>
+                    <h2 style='color:#15803d;'>FUMCES OFFICIAL RECEIPT</h2>
+                    <hr style='border:none; border-top:1px dashed #cbd5e1; margin:20px 0;'>
+                    <div style='text-align:left; line-height:2;'>
+                        <p><b>Ref:</b> {$payment->reference_number}</p>
+                        <p><b>Student:</b> {$name}</p>
+                        <p><b>Amount:</b> ₱" . number_format($payment->amount, 2) . "</p>
+                        <p><b>Date:</b> " . $payment->created_at->format('M d, Y') . "</p>
+                    </div>
+                    <button onclick='window.print()' style='margin-top:20px; padding:10px 20px; background:#15803d; color:white; border:none; border-radius:10px; cursor:pointer;'>Print Receipt</button>
+                </div>
+            ", 200)->header('Content-Type', 'text/html');
         }
 
-        $encryptedContent = Storage::disk('local')->get($payment->receipt_path);
-        $decryptedContent = AESHelper::decrypt($encryptedContent);
+                // 2. Handle Online Receipts
+                $dbPath = $payment->receipt_path;
 
-        $filename = pathinfo($payment->receipt_path, PATHINFO_FILENAME); 
-        $extension = pathinfo($filename, PATHINFO_EXTENSION); 
+                $fullPath = str_contains($dbPath, 'receipts/')
+                    ? $dbPath
+                    : "receipts/" . $dbPath;
 
-        $mimeType = match(strtolower($extension)) {
-            'jpg', 'jpeg' => 'image/jpeg',
-            'png' => 'image/png',
-            'pdf' => 'application/pdf',
-            default => 'application/octet-stream'
-        };
+                // Make sure file exists
+                if (!Storage::disk('local')->exists($fullPath)) {
+                    abort(404, "Receipt file not found.");
+                }
 
-        return response($decryptedContent, 200)
-               ->header('Content-Type', $mimeType)
-               ->header('Content-Disposition', 'inline; filename="receipt.' . $extension . '"');
+                // Get encrypted file
+                $encryptedContent = Storage::disk('local')->get($fullPath);
+
+                // Decrypt it
+                $decryptedContent = AESHelper::decrypt($encryptedContent);
+
+                // Detect real image type (IMPORTANT because your files end in .dat)
+                $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                $contentType = $finfo->buffer($decryptedContent);
+
+                return response($decryptedContent, 200)
+                    ->header('Content-Type', $contentType);
     }
-
-   
-
-    public function destroy(Tuition $tuition)
-    {
-        $tuition->delete();
-        return back()->with('success', 'Tuition record deleted.');
-    }
-    
-    public function edit($id)
-    {
-        // We use Tuition here because the index/edit flow is based on the Tuition ledger
-        $tuition = Tuition::leftJoin('admissions', 'tuitions.studentNumber', '=', 'admissions.studentNumber')
-            ->select('tuitions.*', 'admissions.studentFirstName', 'admissions.studentLastName')
-            ->findOrFail($id);
-
-        return view('cashier.payments.edit', compact('tuition'));
-    }
-    
-
-    public function create()
-    {
-        $students = Admission::with('tuition')->get()->map(function ($student) {
-            return [
-                'id' => $student->studentNumber,
-                'name' => $student->studentFirstName . ' ' . $student->studentLastName,
-                'balance' => $student->tuition->balance ?? 0,
-            ];
-        })->keyBy('id');
-
-        return view('cashier.payments.create', compact('students'));
-    }
-
-    public function searchStudent(Request $request)
-    {
-        $student = Admission::where('studentNumber', $request->query)
-            ->with('tuition')
-            ->first();
-
-        if (!$student) {
-            return response()->json(['exists' => false]);
+        public function download($id)
+        {
+            $payment = Payment::findOrFail($id);
+            if (!$payment->receipt_path || !Storage::disk('local')->exists($payment->receipt_path)) abort(404);
+            
+            $decryptedContent = AESHelper::decrypt(Storage::disk('local')->get($payment->receipt_path));
+            return response($decryptedContent, 200)
+                ->header('Content-Type', 'application/octet-stream')
+                ->header('Content-Disposition', "attachment; filename=\"receipt_{$payment->reference_number}.jpg\"");
         }
-
-        return response()->json([
-            'exists' => true,
-            'name' => $student->studentFirstName . ' ' . $student->studentLastName,
-            'balance' => $student->tuition->balance ?? 0
-        ]);
     }
-
-    public function setPayment(Tuition $tuition)
-    {
-        $tuition->status = 'paid';
-        $tuition->balance = 0;
-        $tuition->save();
-
-        return back()->with('success', 'Payment set successfully.');
-    }
-}
