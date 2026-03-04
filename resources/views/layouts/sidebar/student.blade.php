@@ -8,45 +8,42 @@
                 d="M5.121 17.804A9 9 0 1118.88 17.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
       </div>
-      <p class="font-semibold text-white text-lg">{{ auth()->user()->name }}</p>
-      <p class="text-xs text-white/70">
-        @switch(auth()->user()->role)
-          @case('registrar') Registrar @break
-          @case('admin') System Administrator @break
-          @case('teacher') Teacher @break
-          @case('adviser') Class Adviser @break
-          @default Student
-        @endswitch
-      </p>
-      <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button type="submit" class="mt-2 w-full px-4 py-2 rounded-lg bg-white text-[#057E2E] font-medium hover:bg-gray-100 transition">
-          Logout
-        </button>
-      </form>
-    </div>
-  
+<p class="font-semibold text-white text-lg">{{ auth()->user()->name }}</p>
+
+@if(auth()->user()->role === 'student' && auth()->user()->enrollment)
+    <p class="text-xs text-white/70">{{ auth()->user()->enrollment->studentNumber }}</p>
+@endif
+
+<p class="text-xs text-white/70">
+    @switch(auth()->user()->role)
+        @case('registrar') Registrar @break
+        @case('admin') System Administrator @break
+        @case('teacher') Teacher @break
+        @case('adviser') Class Adviser @break
+        @default Student
+    @endswitch
+</p>
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto p-4 text-sm space-y-1">
 
       <!-- Dashboard -->
-      <a href="{{ route('student.index') }}" 
+      <a href="{{ route('student.dashboard') }}" 
          class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-         {{ request()->routeIs('student.index') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold' }}">
+         {{ request()->routeIs('student.dashboard') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold' }}">
         <span>Dashboard</span>
       </a>
     
-      <!-- Enrollment -->
-      <a href="{{ route('student.enrollment') }}" 
+      <!-- Tuition -->
+      <a href="{{ route('student.tuition.index') }}" 
          class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-         {{ request()->routeIs('student.enrollment') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold' }}">
-        <span>Enrollment</span>
+         {{ request()->routeIs('student.tuition.index') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold' }}">
+        <span>Tuition</span>
       </a>
     
       <!-- Schedule -->
-      <a href="{{ route('student.schedule') }}" 
+      <a href="{{ route('student.schedule.index') }}" 
          class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition
-         {{ request()->routeIs('student.schedule') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold' }}">
+         {{ request()->routeIs('student.schedule.index') ? 'bg-white text-[#057E2E] font-bold shadow-md' : 'text-white hover:bg-white hover:text-[#057E2E] hover:font-semibold' }}">
         <span>Schedule</span>
       </a>
     

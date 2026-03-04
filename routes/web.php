@@ -206,7 +206,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('index');
+        Route::get('/', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('index');
+        Route::get('/analytics', [App\Http\Controllers\Admin\DashboardController::class, 'analytics'])->name('analytics');
+        
         Route::resources([
             'users' => UserController::class,
             'documents' => AdminDocumentController::class,
@@ -214,11 +216,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])
             'schedule' => AdminScheduleController::class,
             'sections' => AdminSectionsController::class,
         ]);
-  Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('ay.index');
+        
+        Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('ay.index');
         Route::post('/academic-years', [AcademicYearController::class, 'store'])->name('ay.store');
         Route::post('/academic-year/{id}/set', [AcademicYearController::class, 'setCurrent'])->name('ay.set');
     });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -313,7 +315,7 @@ Route::middleware(['auth', 'verified', 'role:cashier'])
             Route::post('/', [CashierPaymentController::class, 'store'])->name('store');
             Route::get('/{id}/show', [CashierPaymentController::class, 'show'])->name('show');
             Route::get('/{id}/download', [CashierPaymentController::class, 'download'])->name('download');
-            Route::post('/{id}/approve', [CashierPaymentController::class, 'approveOnline'])->name('approve');
+            Route::post('/{id}/approve-online', [CashierPaymentController::class, 'approveOnline'])->name('approveOnline');
             Route::post('/{id}/reject', [CashierPaymentController::class, 'reject'])->name('reject');
         }); 
     });

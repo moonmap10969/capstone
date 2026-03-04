@@ -14,7 +14,7 @@ class Tuition extends Model
     protected $fillable = [
         'enrollment_id',
         'studentNumber',
-        'academic_year_id', // Added for year tracking
+        'academic_year_id',
         'name',
         'year_level',
         'tuition_fee',
@@ -35,7 +35,6 @@ class Tuition extends Model
 
     protected static function booted()
     {
-        // Automatically set balance equal to amount when assessment is first created
         static::creating(function ($tuition) {
             if (empty($tuition->balance)) {
                 $tuition->balance = $tuition->amount;

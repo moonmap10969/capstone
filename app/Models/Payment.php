@@ -18,6 +18,7 @@ protected $fillable = [
     'reference_number',
     'receipt_path',
     'status',
+    'origin',
     'approval_status',
     'remarks',
 ];
@@ -37,7 +38,7 @@ public function tuition()
 
 public function enrollment()
 {
-    return $this->belongsTo(Enrollment::class);
+    return $this->belongsTo(Enrollment::class, 'enrollment_id');
 }
 
 public function admission()

@@ -190,7 +190,7 @@
                             {{-- NEW: Target Grade Level Selector --}}
                             <div class="col-span-2 space-y-2">
                                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Grade Level</label>
-                                <select name="grade_level" x-model="enrollmentGradeLevel" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl font-bold text-slate-800 outline-none focus:border-green-500 transition-all shadow-sm" required>
+                                <select name="year_level" x-model="enrollmentGradeLevel" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl font-bold text-slate-800 outline-none focus:border-green-500 transition-all shadow-sm" required>
                                     <option value="">Confirm Level...</option>
                                         @foreach([
                                             'kinder1', 'kinder2', 'kinder3', 

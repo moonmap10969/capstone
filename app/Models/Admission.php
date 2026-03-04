@@ -12,14 +12,13 @@ class Admission extends Model
 
     protected $table = 'admissions';
 
-   protected $fillable = [
-    'user_id', 'studentNumber','studentFirstName', 'studentLastName', 'dateOfBirth', 
-    'year_level', 'previousSchool', 'parentFirstName', 'parentLastName', 
-    'email', 'phone', 'address', 'city', 'state', 'zipCode', 
-    'street', 'zip', 'status', 'report_card', 'birth_certificate', 
-    'applicant_photo', 'father_photo', 'mother_photo', 'guardian_photo', 
-    'transferee_docs'
-];
+   protected $fillable = ['user_id', 'studentNumber', 'studentFirstName', 
+   'studentLastName', 'dateOfBirth', 'year_level', 'previousSchool', 
+   'parentFirstName', 'parentLastName', 'email',
+    'phone', 'address', 'city', 'state', 'zipCode', 
+    'street', 'zip', 'status', 'report_card', 'birth_certificate', 'applicant_photo', 
+   'father_photo', 'mother_photo', 'guardian_photo', 'transferee_docs',
+   'household_income', 'household_size', 'employment_status'];
 
 public function user() {
     return $this->belongsTo(User::class);

@@ -15,7 +15,7 @@
 
 <body class="min-h-screen flex bg-slate-50">
 
-    @include('student.layouts.sidebar')
+    @include('layouts.sidebar.student')
 
     <main class="flex-1 p-8 lg:p-12 overflow-y-auto">
         <div class="max-w-6xl mx-auto space-y-10">

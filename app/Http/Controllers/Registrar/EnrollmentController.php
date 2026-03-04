@@ -49,78 +49,61 @@ public function index(Request $request)
         return view('registrar.enrollment.create', compact('approvedAdmissions', 'sections', 'schedules'));
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
 {
-    // 1. Validate the basic requirements
     $request->validate([
         'admission_ids' => 'required|array',
         'section_id' => 'required|exists:sections,section_id',
+        'year_level' => 'required', // Consistent naming
         'shift' => 'required',
     ]);
 
     $activeYear = AcademicYear::where('is_current', true)->first();
-    $section = Section::find($request->section_id);
 
-    // In EnrollmentController@store
-foreach ($request->admission_ids as $id) {
-    $admission = Admission::find($id);
-    
-    $enrollment = Enrollment::create([
-        'studentNumber' => $admission->studentNumber,
-        'section_id'    => $request->section_id,
-        'shift'         => $request->shift,
-        'year_level'    => $request->grade_level, // Use form input
-        'school_year'   => $request->school_year,
-        'status'        => 'enrolled'
-    ]);
-    
-    // Fetch preset based on form's grade_level
-    $preset = FeeStructure::where('year_level', $request->grade_level)
-        ->where('academic_year_id', $activeYear->id)
-        ->first();
-    
-        // 3. Update Admission status so they don't show up in the list anymore
-        $admission->update(['status' => 'enrolled']);
+    foreach ($request->admission_ids as $id) {
+        $admission = Admission::find($id);
+        
+        $enrollment = Enrollment::create([
+            'studentNumber' => $admission->studentNumber,
+            'section_id'    => $request->section_id,
+            'shift'         => $request->shift,
+            'year_level'    => $request->year_level, 
+            'school_year'   => $request->school_year,
+            'status'        => 'enrolled'
+        ]);
 
-        // 4. Generate Tuition Assessment
-        $preset = FeeStructure::where('year_level', $admission->year_level)
+        $preset = FeeStructure::where('year_level', $request->year_level)
             ->where('academic_year_id', $activeYear->id)
             ->first();
 
         if ($preset) {
-            $tuitionData = $this->calculateFlexibleFees($admission, $enrollment, $preset, $request);
+            // Pass the data consistently
+            $tuitionData = $this->calculateFlexibleFees($admission, $enrollment, $preset);
             Tuition::create($tuitionData);
         }
+
+        $admission->update(['status' => 'enrolled']);
     }
 
-    return redirect()->route('registrar.enrollment.index')->with('success', 'Students enrolled and assessments generated.');
+    return redirect()->route('registrar.enrollment.index')->with('success', 'Students enrolled successfully.');
 }
 
-private function calculateFlexibleFees($admission, $enrollment, $preset, $request)
+private function calculateFlexibleFees($admission, $enrollment, $preset)
 {
     $baseTuition = (float) $preset->base_tuition;
     $totalMisc = (float) $preset->total_misc;
-    $discountRate = 0;
-
-    // Apply Grade 7 Discount (30%)
-    if ($admission->year_level === 'Grade 7') { $discountRate += 0.30; }
-
-    // Use default values since these aren't in your current form
-    $paymentSchedule = 'monthly'; 
-    
-    $netTuition = $baseTuition * (1 - min($discountRate, 1));
     
     return [
-        'enrollment_id'    => $enrollment->id, // Critical link
+        'enrollment_id'    => $enrollment->id,
         'studentNumber'    => $admission->studentNumber,
         'academic_year_id' => $preset->academic_year_id, 
         'name'             => "{$admission->studentFirstName} {$admission->studentLastName}",
-        'grade_level'      => $admission->year_level,
-        'tuition_fee'      => $netTuition,
+        'year_level'       => $enrollment->year_level, 
+        'tuition_fee'      => $baseTuition,
         'misc_fees'        => $totalMisc,
-        'amount'           => $netTuition + $totalMisc,
-        'balance'          => $netTuition + $totalMisc,
-        'payment_schedule' => $paymentSchedule,
+        'amount'           => $baseTuition + $totalMisc,
+        'balance'          => $baseTuition + $totalMisc,
+        'payment_schedule' => 'monthly',
         'status'           => 'pending'
     ];
 }

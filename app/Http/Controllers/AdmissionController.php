@@ -15,13 +15,14 @@ class AdmissionController extends Controller
 {
     public function index()
     {
+        
         if (Auth::guest()) {
             return view('admissions');
         }
         
             $user = Auth::user();
         $currentYear = \App\Models\AcademicYear::where('is_current', true)->first();
-
+    /** @var \App\Models\User $user */ $user = Auth::user();
         $admission = $user->admissions()
             ->where('academic_year_id', $currentYear->id ?? null)
             ->latest()
@@ -54,6 +55,9 @@ class AdmissionController extends Controller
             'city'             => 'required|string',
             'state'            => 'required|string',
             'zipCode'          => 'required|string',
+            'household_income' => 'required|string',
+            'household_size'   => 'required|integer|min:1',
+            'employment_status'=> 'required|string',
             'report_card'      => 'required|image|max:2048',
             'birth_certificate'=> 'required|image|max:2048',
             'applicant_photo'  => 'required|image|max:2048',

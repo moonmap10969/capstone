@@ -5,39 +5,68 @@
     <title>Payment Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="min-h-screen flex bg-gray-50">
+<body class="min-h-screen flex bg-gray-50" x-data="{ showSuccess: true }">
 
     @include('layouts.sidebar.cashier')
 
     <main class="flex-1 min-h-screen p-6 lg:p-12 overflow-y-auto">
         <div class="max-w-7xl mx-auto">
-            <header class="flex justify-between items-center mb-10">
+            
+            {{-- Success Notification --}}
+            @if(session('success'))
+            <div x-show="showSuccess" x-transition x-init="setTimeout(() => showSuccess = false, 5000)" 
+                 class="fixed top-6 right-6 z-50 bg-green-600 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 border border-green-500">
+                <div class="bg-white/20 p-2 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </div>
                 <div>
-                    <span class="text-green-700 font-bold tracking-widest text-xs uppercase">Financial Terminal</span>
-                    <h1 class="text-4xl font-extrabold text-slate-900 mt-1">Collect Payment</h1>
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-70">System Message</p>
+                    <p class="font-bold text-sm">{{ session('success') }}</p>
+                </div>
+                <button @click="showSuccess = false" class="ml-4 opacity-50 hover:opacity-100">&times;</button>
+            </div>
+            @endif
+
+            <header class="flex justify-between items-center mb-10">
+                <div class="flex items-center gap-6">
+                    {{-- Back Arrow --}}
+                    <a href="{{ route('cashier.payments.index') }}" class="group bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:bg-slate-900 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </a>
+                    <div>
+                        <span class="text-green-700 font-bold tracking-widest text-xs uppercase">Financial Terminal</span>
+                        <h1 class="text-4xl font-extrabold text-slate-900 mt-1">Collect Payment</h1>
+                    </div>
                 </div>
                 <button type="button" onclick="resetPortal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-3 rounded-2xl font-bold text-xs transition-all uppercase tracking-widest">
                     Clear Form
                 </button>
             </header>
-@if ($errors->any())
-    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-xl">
-        <ul class="list-disc ml-5 text-red-700 font-bold">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+
+            @if ($errors->any())
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-xl">
+                    <ul class="list-disc ml-5 text-red-700 font-bold">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div class="lg:col-span-2 space-y-6">
                     <form action="{{ route('cashier.payments.store') }}" method="POST" id="paymentForm" enctype="multipart/form-data" class="space-y-6">
                         @csrf
-                       {{-- Hidden Fields for Data Sync --}}
-                    <input type="hidden" name="enrollment_id" id="enrollment_id_input">
-                    <input type="hidden" name="tuition_id" id="tuition_id_input">
-                    <input type="hidden" name="academic_year_id" id="academic_year_id_input">
+                        {{-- Hidden Fields for Data Sync --}}
+                        <input type="hidden" name="enrollment_id" id="enrollment_id_input">
+                        <input type="hidden" name="tuition_id" id="tuition_id_input">
+                        <input type="hidden" name="academic_year_id" id="academic_year_id_input">
                         
                         <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                             <div class="flex items-center gap-3 mb-6">
@@ -54,9 +83,9 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Verified Name / Balance</label>
-                                        <div id="verifyBox" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 min-h-[62px] flex items-center">
-                                    <span id="nameDisplay" class="text-slate-400 font-medium italic">Awaiting Student ID...</span>
-                                     </div>
+                                    <div id="verifyBox" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 min-h-[62px] flex items-center">
+                                        <span id="nameDisplay" class="text-slate-400 font-medium italic">Awaiting Student ID...</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -98,7 +127,7 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Upload Encrypted Receipt (ISO Standard)</label>
-                                    <input type="file" name="receipt_path" id="fileInput" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-green-600 hover:file:text-white cursor-pointer">
+                                    <input type="file" name="receipt" id="fileInput" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-green-600 hover:file:text-white cursor-pointer">
                                 </div>
                             </div>
                         </div>
@@ -150,7 +179,7 @@
     const summaryRemaining = document.getElementById('summaryRemaining');
     const enrollmentInput = document.getElementById('enrollment_id_input');
     const tuitionInput = document.getElementById('tuition_id_input');
-    const academicYearInput = document.getElementById('academic_year_id_input'); // Added Fix
+    const academicYearInput = document.getElementById('academic_year_id_input');
 
     const format = (num) => '₱' + parseFloat(num || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
     let currentBalance = 0;
@@ -174,10 +203,9 @@
             summaryPaying.innerText = '₱0.00';
             summaryRemaining.innerText = format(currentBalance);
             
-            // Populate hidden IDs for the form submission
             enrollmentInput.value = student.enrollment_id;
             tuitionInput.value = student.tuition_id;
-            academicYearInput.value = student.academic_year_id; // Added Fix
+            academicYearInput.value = student.academic_year_id;
             amountInput.value = '';
         } else {
             resetUI();
@@ -204,7 +232,7 @@
         resetUI();
     }
 
-   function resetUI() {
+    function resetUI() {
         currentBalance = 0;
         nameDisplay.innerHTML = idInput.value.length > 0 ? '<span class="text-red-400">Not Found</span>' : 'Awaiting Student ID...';
         summaryBalance.innerText = '₱0.00';

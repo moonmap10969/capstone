@@ -32,8 +32,8 @@
             @php
             $steps = [
                 ['title' => 'Complete Application', 'icon' => 'M3 7h18M3 12h18M3 17h18'],
-                ['title' => 'On-site Submission & Interview', 'icon' => 'M12 4v16m8-8H4'], // Updated
-                ['title' => 'Fee Payment & Verification', 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'], // Updated
+                ['title' => 'On-site Submission & Interview', 'icon' => 'M12 4v16m8-8H4'],
+                ['title' => 'Fee Payment & Verification', 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'],
                 ['title' => 'Welcome to FUMCES!', 'icon' => 'M5 13l4 4L19 7']
             ];
             @endphp
@@ -123,28 +123,55 @@
                         </div>
                     </div>
 
- <div class="mb-10">
+                    <div class="mb-10">
+                        <h3 class="text-xl font-bold mb-6 pb-2 border-b">Economic Demographics</h3>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Annual Household Income *</label>
+                                <select name="household_income" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-700 outline-none" required>
+                                    <option value="">Select Income Range</option>
+                                    <option value="below_25k">Below ₱25,000</option>
+                                    <option value="25k_to_50k">₱25,000 - ₱50,000</option>
+                                    <option value="50k_to_100k">₱50,000 - ₱100,000</option>
+                                    <option value="above_100k">₱100,000+</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Household Size *</label>
+                                <input type="number" name="household_size" min="1" placeholder="Number of people in household" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-700 outline-none" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Primary Earner Employment Status *</label>
+                                <select name="employment_status" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-700 outline-none" required>
+                                    <option value="">Select Status</option>
+                                    <option value="employed_full">Employed (Full-time)</option>
+                                    <option value="employed_part">Employed (Part-time)</option>
+                                    <option value="self_employed">Self-Employed / Business Owner</option>
+                                    <option value="unemployed">Unemployed</option>
+                                    <option value="retired">Retired</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-10 bg-gray-50 p-6 rounded-2xl border border-gray-100">
                       <h3 class="text-xl font-bold mb-6 pb-2 border-b border-gray-200 text-gray-800">Document Submission</h3>
-                     
+                      
                       <div class="grid md:grid-cols-2 gap-x-8 gap-y-6">
                           <div class="space-y-1">
                               <label class="text-sm font-semibold text-gray-700">Report Card *</label>
                               <input type="file" name="report_card" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-green-700 hover:file:bg-blue-100 transition" required>
                           </div>
 
-
                           <div class="space-y-1">
                               <label class="text-sm font-semibold text-gray-700">Birth Certificate (Photocopy) *</label>
                               <input type="file" name="birth_certificate" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-green-700 hover:file:bg-blue-100 transition" required>
                           </div>
 
-
                           <div class="space-y-1">
                               <label class="text-sm font-semibold text-gray-700">1x1 Photo of Applicant *</label>
                               <input type="file" name="applicant_photo" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-green-700 hover:file:bg-blue-100 transition" required>
                           </div>
-
 
                           <div class="grid grid-cols-3 gap-2 md:col-span-2 pt-2">
                               <div class="space-y-1">
@@ -162,17 +189,15 @@
                           </div>
                       </div>
 
-
                       <div class="mt-8 pt-6 border-t border-dashed border-gray-300">
                           <label class="text-sm font-semibold text-gray-700 block mb-2">For Transferees (Permanent Record / Good Moral)</label>
                           <input type="file" name="transferee_docs" class="block w-full text-sm text-gray-500  file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-green-50 file:text-green-700 hover:file:bg-green-100 transition">
                       </div>
                   </div>
 
-
-<button type="submit" id="submitBtn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-green-700 font-bold py-4 rounded-xl shadow-md transition-all">
-    SUBMIT APPLICATION
-</button>
+                    <button type="submit" id="submitBtn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-green-700 font-bold py-4 rounded-xl shadow-md transition-all">
+                        SUBMIT APPLICATION
+                    </button>
                 </form>
             </div>
         </section>
@@ -211,6 +236,7 @@
             document.getElementById('admissionForm').submit();
         @else
             document.getElementById('authModal').classList.replace('hidden', 'flex');
+            e.preventDefault(); 
         @endauth
     });
   </script>
