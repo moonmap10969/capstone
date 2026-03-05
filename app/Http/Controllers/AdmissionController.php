@@ -46,6 +46,7 @@ class AdmissionController extends Controller
             'studentFirstName' => 'required|string|max:255',
             'studentLastName'  => 'required|string|max:255',
             'dateOfBirth'      => 'required|date',
+            'gender'           => 'required|in:Male,Female',
             'year_level'       => 'required|string',
             'parentFirstName'  => 'required|string|max:255',
             'parentLastName'   => 'required|string|max:255',

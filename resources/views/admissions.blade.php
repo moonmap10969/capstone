@@ -81,6 +81,14 @@
                                 <input type="date" name="dateOfBirth" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-700 outline-none" required>
                             </div>
                             <div>
+                                <label class="block text-sm font-medium mb-2">Gender *</label>
+                                <select name="gender" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-700 outline-none" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-sm font-medium mb-2">Grade Applying For *</label>
                                <select name="year_level" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-700 outline-none" required>
                                     <option value="">Select a grade</option>

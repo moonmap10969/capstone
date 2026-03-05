@@ -20,7 +20,7 @@ use App\Http\Controllers\Admin\{
     AcademicYearController,
     AdminScheduleController,
     DashboardController,
-    ReportController as AdminReportController,
+    ReportController,
     TuitionController as AdminTuitionController,
     DocumentController as AdminDocumentController,
     SectionController as AdminSectionsController,
@@ -132,7 +132,10 @@ Route::middleware(['auth', 'verified', 'role:student'])
         Route::post('/tuition', [StudentTuitionController::class, 'store'])->name('tuition.store');
 
         // Documents
-        Route::resource('documents', DocumentController::class)->only(['index', 'store', 'destroy']);
+        Route::get('/documents', [DocumentController::class, 'index'])
+        ->name('documents.index');
+         Route::get('/documents/download/{column}', [DocumentController::class, 'download'])
+        ->name('documents.download');
 
         // Protected routes after admission approval
         Route::middleware(['EnsureAdmissionApproved'])->group(function () {
@@ -220,6 +223,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('ay.index');
         Route::post('/academic-years', [AcademicYearController::class, 'store'])->name('ay.store');
         Route::post('/academic-year/{id}/set', [AcademicYearController::class, 'setCurrent'])->name('ay.set');
+
+        Route::get('/socioeconomics', [DashboardController::class, 'economics'])->name('economics');
+        Route::get('/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports');
+        Route::get('/reports/export', [App\Http\Controllers\Admin\ReportController::class, 'exportCsv'])->name('reports.export');
     });
 
 /*
@@ -228,29 +235,31 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified', 'role:registrar'])
-    ->prefix('registrar')
-    ->name('registrar.')
-    ->group(function () {
-        Route::get('/', [RegistrarDashboardController::class, 'index'])->name('index');
+    Route::middleware(['auth', 'verified', 'role:registrar'])
+        ->prefix('registrar')
+        ->name('registrar.')
+        ->group(function () {
+            Route::get('/', [RegistrarDashboardController::class, 'index'])->name('index');
 
-        Route::resource('students', RegistrarStudentController::class);
-        
-        Route::resource('enrollment', EnrollmentController::class);
-        
-        Route::resource('tuitions', RegistrarTuitionController::class);
+            Route::resource('students', RegistrarStudentController::class);
+            
+            Route::get('enrollment/retention', [EnrollmentController::class, 'retentionAnalytics'])->name('enrollment.retention');
+            Route::post('enrollment/send-alerts', [EnrollmentController::class, 'sendBurstAlerts'])->name('enrollment.send_alerts');
+            Route::resource('enrollment', EnrollmentController::class);
+            
+            Route::resource('tuitions', RegistrarTuitionController::class);
 
-        Route::patch('tuitions/{tuition}/approve', [RegistrarTuitionController::class, 'approve'])->name('tuitions.approve');
+            Route::patch('tuitions/{tuition}/approve', [RegistrarTuitionController::class, 'approve'])->name('tuitions.approve');
 
-        Route::get('/classlist', [ClassListController::class, 'index'])->name('classlist.index');
-        Route::get('/classlist/{section}/export', [ClassListController::class, 'export'])->name('classlist.export');
-        Route::get('/classlist/{section}/download', [ClassListController::class, 'downloadPdf'])->name('classlist.download');
+            Route::get('/classlist', [ClassListController::class, 'index'])->name('classlist.index');
+            Route::get('/classlist/{section}/export', [ClassListController::class, 'export'])->name('classlist.export');
+            Route::get('/classlist/{section}/download', [ClassListController::class, 'downloadPdf'])->name('classlist.download');
 
-        Route::prefix('reports')->name('')->group(function () {
-            Route::get('/enrollment-summary', [RegistrarReportController::class, 'enrollmentSummary'])->name('reports.enrollment-summary');
-            Route::get('/payment-reports', [RegistrarReportController::class, 'paymentReports'])->name('reports.payment-reports');
+            Route::prefix('reports')->name('')->group(function () {
+                Route::get('/enrollment-summary', [RegistrarReportController::class, 'enrollmentSummary'])->name('reports.enrollment-summary');
+                Route::get('/payment-reports', [RegistrarReportController::class, 'paymentReports'])->name('reports.payment-reports');
+            });
         });
-    });
 
 /*
 |--------------------------------------------------------------------------

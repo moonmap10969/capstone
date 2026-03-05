@@ -13,7 +13,7 @@ class Admission extends Model
     protected $table = 'admissions';
 
    protected $fillable = ['user_id', 'studentNumber', 'studentFirstName', 
-   'studentLastName', 'dateOfBirth', 'year_level', 'previousSchool', 
+   'studentLastName', 'dateOfBirth','gender', 'year_level', 'previousSchool', 
    'parentFirstName', 'parentLastName', 'email',
     'phone', 'address', 'city', 'state', 'zipCode', 
     'street', 'zip', 'status', 'report_card', 'birth_certificate', 'applicant_photo', 

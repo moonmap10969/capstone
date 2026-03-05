@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Registrar | Enrollment</title>
+    <title>Registrar | Enrollment Management</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -13,7 +13,8 @@
     @include('layouts.sidebar.registrar')
 
     <main class="flex-1 p-8 overflow-y-auto">
-<div class="max-w-[1600px] mx-auto space-y-8">
+        <div class="max-w-[1600px] mx-auto space-y-8">
+            
             {{-- Header Section --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -21,10 +22,18 @@
                     <p class="text-gray-500 text-sm mt-1">Manage student enrollments and academic records.</p>
                 </div>
 
-                <div x-data="{ openMenu: false }" class="relative">
+                <div class="flex flex-wrap items-center gap-3">
+                    {{-- Strategic Retention Feature --}}
+                    <a href="{{ route('registrar.enrollment.retention') }}" 
+                       class="bg-orange-50 text-orange-700 border border-orange-200 px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-orange-100 transition-all active:scale-95 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-width="2.5"/></svg>
+                        Retention Alerts
+                        <span class="bg-orange-600 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-1">{{ $atRiskStudents->count() }}</span>
+                    </a>
+
                     <a href="{{ route('registrar.enrollment.create', ['type' => 'new']) }}"
-                    class="bg-[#057E2E] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-green-900/20 hover:bg-[#046625] transition-all active:scale-95 inline-block">
-                    + New Enrollment
+                       class="bg-[#057E2E] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-green-900/20 hover:bg-[#046625] transition-all active:scale-95 inline-block">
+                        + New Enrollment
                     </a>
                 </div>
             </div>
@@ -45,7 +54,7 @@
                 </div>
             </div>
 
-            {{-- Search & Filter Row --}}
+            {{-- Search & Filter Row (Restored all dropdowns) --}}
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col lg:flex-row gap-4">
                 <div class="relative flex-1">
                     <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -56,6 +65,7 @@
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-3">
+                    {{-- Restored Academic Year Selector --}}
                     <select name="academic_year" class="border-gray-200 border bg-gray-50/50 rounded-xl p-3 min-w-[180px] focus:ring-4 focus:ring-green-500/10 focus:border-[#057E2E] font-bold text-gray-600 transition-all outline-none" onchange="window.location.href='?academic_year='+this.value">
                         <option value="">All Academic Years</option>
                         @foreach($academicYears as $ay)
@@ -79,7 +89,7 @@
                 </div>
             </div>
 
-            {{-- Table Section --}}
+            {{-- Table Section (Restored full layout) --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-gray-50/50 border-b border-gray-200 text-[11px] font-black text-gray-400 uppercase tracking-widest">
@@ -137,6 +147,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                {{-- Restored Pagination --}}
                 <div class="p-6 bg-gray-50/50 border-t border-gray-100">
                     {{ $enrollments->links() }}
                 </div>
@@ -144,7 +155,7 @@
         </div>
     </main>
 
-    {{-- Detail Modal --}}
+    {{-- Restored Detail Modal --}}
     <div x-show="viewModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="viewModal = false"></div>
         <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative z-10" @click.away="viewModal = false">
@@ -176,10 +187,6 @@
                     <div class="space-y-1">
                         <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">Section</p>
                         <p class="font-bold text-green-700" x-text="selectedEnrollment?.section?.name || 'N/A'"></p>
-                    </div>
-                    <div class="space-y-1">
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">Status</p>
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-gray-100 text-gray-800" x-text="selectedEnrollment?.status"></span>
                     </div>
                 </div>
             </div>

@@ -11,6 +11,7 @@ class Enrollment extends Model
 
     protected $fillable = [
         'studentNumber', 
+        'academic_year_id',
         'section_id', 
         'shift', 
         'year_level', 

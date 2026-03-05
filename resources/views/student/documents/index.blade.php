@@ -2,116 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Student | Document Repository</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Document Upload</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="min-h-screen flex bg-gray-50">
-
-    {{-- Sidebar --}}
+<body class="min-h-screen bg-[#F8FAFC] flex font-sans">
+    
     @include('student.layouts.sidebar')
-
-    <main class="flex-1 p-8 w-full">
-        <div class="space-y-6 max-w-5xl mx-auto">
-
-            {{-- Page Header --}}
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-900">Admission Documents</h1>
+    
+    <main class="flex-1 p-8 lg:p-12 overflow-y-auto">
+        <div class="max-w-6xl mx-auto space-y-8">
+            
+            {{-- Header --}}
+            <div class="flex items-center justify-between border-b border-slate-200 pb-6">
+                <div>
+                    <h1 class="text-3xl font-black text-slate-800 tracking-tight">Document Repository</h1>
+                    <p class="text-xs font-bold text-green-600 uppercase tracking-widest mt-1">Admission Requirements & Records</p>
+                </div>
             </div>
 
-            {{-- Progress Card --}}
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            {{-- Error Notification --}}
+            @if(session('error'))
+            <div class="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.268 16c-.77 1.333.192 3 1.732 3z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                {{ session('error') }}
+            </div>
+            @endif
+
+            {{-- Document Grid --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($documents as $column => $data)
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between h-56 group hover:border-green-200 transition-all">
                     <div>
-                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Submission Progress</p>
-                        <p class="text-3xl font-bold text-gray-900">{{ $stats['submitted'] }} 
-                            <span class="text-lg text-gray-400 font-normal">of {{ $stats['total'] }} documents</span>
-                        </p>
-                    </div>
-                    <div class="flex gap-4 text-sm font-semibold">
-                        <div class="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span> {{ $stats['submitted'] }} Approved
-                        </div>
-                        <div class="flex items-center gap-2 text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
-                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span> {{ $stats['pending'] }} Pending
-                        </div>
-                    </div>
-                </div>
-                <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden border border-gray-200">
-                    <div class="bg-blue-600 h-full transition-all duration-700 ease-in-out" style="width: {{ $progress }}%"></div>
-                </div>
-            </div>
-
-            {{-- Required Documents --}}
-            @php
-                $required = [
-                    'report_card'       => ['title' => 'Report Card (Form 138)', 'desc' => 'Latest school report card from previous grade level.'],
-                    'birth_certificate' => ['title' => 'PSA Birth Certificate', 'desc' => 'Original and photocopy of PSA Birth Certificate.'],
-                    'applicant_photo'   => ['title' => 'Applicant Photo', 'desc' => '2x2 ID photo with white background.'],
-                    'father_photo'      => ['title' => 'Father\'s Photo', 'desc' => 'Recent ID photo of the father.'],
-                    'mother_photo'      => ['title' => 'Mother\'s Photo', 'desc' => 'Recent ID photo of the mother.'],
-                    'guardian_photo'    => ['title' => 'Guardian\'s Photo', 'desc' => 'Recent ID photo of the legal guardian.'],
-                    'transferee_docs'   => ['title' => 'Transferee Documents', 'desc' => 'Honorable dismissal or transfer credentials.']
-                ];
-            @endphp
-
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/30">
-                    <h2 class="text-lg font-bold text-gray-800">Required Admission Files</h2>
-                </div>
-                <div class="p-6 space-y-4">
-                    @foreach($required as $key => $info)
-                        @php 
-                            $existing = $documents->where('title', $key)->first(); 
-                        @endphp
-
-                        <div class="flex flex-col sm:flex-row items-center justify-between p-4 border rounded-lg gap-4">
-                            {{-- Document Info --}}
-                            <div>
-                                <h3 class="font-bold text-gray-900">{{ $info['title'] }}</h3>
-                                <p class="text-sm text-gray-500">{{ $info['desc'] }}</p>
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl mb-4 flex items-center justify-center {{ $data['path'] ? 'bg-green-50 text-green-600' : 'bg-slate-50 text-slate-400' }}">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
                             </div>
-
-                            {{-- Status and Actions --}}
-                            <div class="flex flex-col sm:flex-row items-center gap-2">
-                                @if($existing)
-                                    <span class="px-3 py-1 text-xs font-bold rounded-full 
-                                        {{ $existing->status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                                        {{ strtoupper($existing->status) }}
-                                    </span>
-                                    <a href="{{ asset('storage/' . $existing->file_path) }}" target="_blank" class="text-blue-600 font-bold underline text-sm">VIEW</a>
-                                @else
-                                    <span class="text-gray-400 italic text-sm">NOT SUBMITTED</span>
-                                @endif
-
-                                {{-- Upload Form --}}
-                                <form action="{{ route('student.documents.upload') }}" method="POST" enctype="multipart/form-data" class="flex gap-2 items-center">
-                                    @csrf
-                                    <input type="hidden" name="title" value="{{ $key }}">
-                                    <input type="file" name="file" class="file-input" onchange="updateFileName(this)">
-                                    <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded">Upload</button>
-                                </form>
-                            </div>
+                            @if($data['path'])
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Available</span>
+                            @else
+                                <span class="bg-red-50 text-red-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Missing</span>
+                            @endif
                         </div>
-                    @endforeach
+                        <h3 class="font-bold text-slate-800 text-sm">{{ $data['title'] }}</h3>
+                        <p class="text-[10px] font-medium text-slate-400 mt-1">Database Key: <span class="font-mono">{{ $column }}</span></p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        @if($data['path'])
+                        <a href="{{ route('student.documents.download', $column) }}" class="block w-full text-[10px] font-black text-white bg-green-700 hover:bg-green-800 py-3 rounded-xl uppercase tracking-widest text-center shadow-lg shadow-green-900/10 transition-all active:scale-95">
+                            Download File
+                        </a>
+                        @else
+                        <button disabled class="w-full text-[10px] font-black text-slate-400 bg-slate-50 py-3 rounded-xl uppercase tracking-widest text-center cursor-not-allowed border border-slate-100">
+                            No File Submitted
+                        </button>
+                        @endif
+                    </div>
                 </div>
+                @endforeach
             </div>
 
         </div>
     </main>
-
-    <script>
-        function updateFileName(input) {
-            const label = input.parentElement.querySelector('.file-name');
-            if (input.files.length > 0) {
-                label.textContent = input.files[0].name;
-                label.classList.add('text-blue-600', 'font-semibold');
-            }
-        }
-    </script>
 </body>
 </html>

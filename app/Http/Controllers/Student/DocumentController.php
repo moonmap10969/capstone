@@ -3,107 +3,50 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Document;
+use App\Models\Admission;
 
 class DocumentController extends Controller
 {
-    // Show all documents for the student portal
     public function index()
     {
-        $student = Auth::user();
-
-        // Fetch all documents (admissions + portal)
-        $documents = $student->documents;
-
-        $totalRequired = 6;
-
-        $stats = [
-            'total'     => $totalRequired,
-            'submitted' => $documents->where('status', 'approved')->count(),
-            'pending'   => $documents->where('status', 'pending')->count(),
-            'rejected'  => $documents->where('status', 'rejected')->count(),
+        $admission = Admission::where('user_id', Auth::id())->firstOrFail();
+        
+        // Map your actual database columns here
+        $documents = [
+            'form_138' => [
+                'title' => 'Form 138 / Report Card', 
+                'path' => $admission->form_138
+            ],
+            'good_moral' => [
+                'title' => 'Good Moral Certificate', 
+                'path' => $admission->good_moral
+            ],
+            'psa_birth_cert' => [
+                'title' => 'PSA Birth Certificate', 
+                'path' => $admission->psa_birth_cert
+            ],
+            'id_picture' => [
+                'title' => '2x2 ID Picture', 
+                'path' => $admission->id_picture
+            ],
         ];
 
-        $progress = ($stats['submitted'] / $totalRequired) * 100;
-
-        return view('student.documents.index', compact('documents', 'stats', 'progress'));
+        return view('student.documents.index', compact('documents'));
     }
 
-    // Handle uploads from BOTH admission form & student portal
-   public function store(Request $request)
-{
-    $student = Auth::user();
-
-    // Determine type: 'admission' if coming from admission form, else 'student_upload'
-    $type = $request->input('type') ?? 'student_upload';
-
-    // Admission form files
-    $admissionFiles = [
-        'report_card',
-        'birth_certificate',
-        'applicant_photo',
-        'father_photo',
-        'mother_photo',
-        'guardian_photo',
-        'transferee_docs'
-    ];
-
-    foreach ($admissionFiles as $fileKey) {
-        if ($request->hasFile($fileKey)) {
-            $file = $request->file($fileKey);
-            $path = $file->store('documents', 'public');
-
-            Document::updateOrCreate(
-                ['user_id' => $student->id, 'file_name' => $fileKey], // use file_name
-                [
-                    'file_path' => $path,
-                    'status'    => 'pending',
-                    'type'      => $type,
-                ]
-            );
-        }
-    }
-
-    // Student portal single file upload
-    if ($request->hasFile('file') && $request->has('file_name')) {
-        $file = $request->file('file');
-        $path = $file->store('documents', 'public');
-
-        Document::updateOrCreate(
-            ['user_id' => $student->id, 'file_name' => $request->file_name],
-            [
-                'file_path' => $path,
-                'status'    => 'pending',
-                'type'      => $type,
-            ]
-        );
-    }
-
-    $message = $type === 'admission'
-        ? 'Admission documents uploaded successfully.'
-        : 'Document uploaded successfully.';
-
-    return back()->with('success', $message);
-}
-
-    // Delete a document
-    public function destroy(Document $document)
+    public function download($column)
     {
-        $student = Auth::user();
+        $admission = Admission::where('user_id', Auth::id())->firstOrFail();
+        
+        // Security check to prevent unauthorized column access
+        $validColumns = ['form_138', 'good_moral', 'psa_birth_cert', 'id_picture'];
 
-        if ($document->user_id !== $student->id) {
-            abort(403, 'Unauthorized');
+        if (in_array($column, $validColumns) && !empty($admission->$column)) {
+            return Storage::download($admission->$column);
         }
 
-        if ($document->file_path) {
-            Storage::disk('public')->delete($document->file_path);
-        }
-
-        $document->delete();
-
-        return back()->with('success', 'Document deleted successfully.');
+        return redirect()->back()->with('error', 'Requested document is unavailable or was not submitted.');
     }
 }

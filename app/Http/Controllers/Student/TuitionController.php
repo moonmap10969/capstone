@@ -40,8 +40,8 @@ class TuitionController extends Controller
         $selectedYearId = $request->get('academic_year_id') ?? $studentTuitions->last()->academic_year_id;
         $activeTuition = $studentTuitions->where('academic_year_id', $selectedYearId)->first();
 
-        // THE FIX: Pull directly from the tuition record or linked enrollment
-        $gradeFromDb = $admission->year_level ?? '';
+        // THE FIX: Pull the grade level directly from the specific tuition record, NOT the admission record
+        $gradeFromDb = $activeTuition->year_level ?? '';
         $studentLevel = str_replace(' ', '', strtolower($gradeFromDb));
 
         $feeRecord = DB::table('fee_structures')
@@ -53,23 +53,31 @@ class TuitionController extends Controller
         $totalMisc = $feeRecord ? $feeRecord->total_misc : 0;
         $totalAssessment = $baseTuition + $totalMisc;
 
-        $miscFees = $feeRecord ? [
-            'Registration Fee' => $feeRecord->reg_fee,
-            'Learning Materials' => $feeRecord->learning_materials,
-            'Medical & Dental' => $feeRecord->medical_dental,
-            'Testing Materials' => $feeRecord->testing_materials,
-            'ID Fee' => $feeRecord->id_fee,
-            'Insurance' => $feeRecord->insurance,
-            'AV / Computer' => $feeRecord->av_computer,
-            'Handbook' => $feeRecord->handbook,
-            'Athletes' => $feeRecord->athletes,
-            'Red Cross' => $feeRecord->red_cross,
-            'Energy Fee' => $feeRecord->energy_fee,
-            'Membership Fees' => $feeRecord->membership_fees,
-            'PRISAP / UMESA' => $feeRecord->prisap_umesa,
-            'HGP Modules' => $feeRecord->hgp_modules,
-            'Lab Fees' => $feeRecord->lab_fees,
-        ] : [];
+        // Map fees and filter out any that are 0 to keep the modal clean
+        $miscFees = [];
+        if ($feeRecord) {
+            $allMiscFees = [
+                'Registration Fee' => $feeRecord->reg_fee,
+                'Learning Materials' => $feeRecord->learning_materials,
+                'Medical & Dental' => $feeRecord->medical_dental,
+                'Testing Materials' => $feeRecord->testing_materials,
+                'ID Fee' => $feeRecord->id_fee,
+                'Insurance' => $feeRecord->insurance,
+                'AV / Computer' => $feeRecord->av_computer,
+                'Handbook' => $feeRecord->handbook,
+                'Athletes' => $feeRecord->athletes,
+                'Red Cross' => $feeRecord->red_cross,
+                'Energy Fee' => $feeRecord->energy_fee,
+                'Membership Fees' => $feeRecord->membership_fees,
+                'PRISAP / UMESA' => $feeRecord->prisap_umesa,
+                'HGP Modules' => $feeRecord->hgp_modules,
+                'Lab Fees' => $feeRecord->lab_fees,
+            ];
+
+            $miscFees = array_filter($allMiscFees, function($amount) {
+                return (float) $amount > 0;
+            });
+        }
 
         $tuitions = Payment::where('tuition_id', $activeTuition->id)
             ->orderBy('created_at', 'desc')
@@ -107,9 +115,9 @@ class TuitionController extends Controller
 
         $tuition = Tuition::with('enrollment')->findOrFail($request->tuition_id);
         
-    $studentAdmission = \App\Models\Admission::where('studentNumber', $tuition->studentNumber)->first();
-    $gradeFromDb = $studentAdmission->year_level ?? '';
-    $studentLevel = str_replace(' ', '', strtolower($gradeFromDb));
+        // THE FIX: Pull the grade level from the tuition record here as well
+        $gradeFromDb = $tuition->year_level ?? '';
+        $studentLevel = str_replace(' ', '', strtolower($gradeFromDb));
 
         $feeRecord = DB::table('fee_structures')
             ->where('academic_year_id', $tuition->academic_year_id)
